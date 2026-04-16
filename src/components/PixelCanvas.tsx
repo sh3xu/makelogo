@@ -192,6 +192,15 @@ export function PixelCanvas({
       }
     }
 
+    // Ghost + hover should match active-layer rotation
+    const activeLayer = layerManager.getActiveLayer();
+    ctx.save();
+    if (activeLayer.rotation !== 0) {
+      ctx.translate(centerPx, centerPx);
+      ctx.rotate((activeLayer.rotation * Math.PI) / 180);
+      ctx.translate(-centerPx, -centerPx);
+    }
+
     // Ghost cells for shape tools
     const ghost = ghostRef.current;
     if (ghost.length > 0) {
