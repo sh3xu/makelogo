@@ -125,7 +125,7 @@ export function PixelCanvas({
     if (!ctx) return;
 
     const dpr = window.devicePixelRatio || 1;
-    const displayW = Math.min(canvasPixels, maxSize * 2);
+    const displayW = Math.min(canvasPixels, maxSize);
     const displayH = displayW;
     const w = displayW * dpr;
     if (canvas.width !== w || canvas.height !== w) {

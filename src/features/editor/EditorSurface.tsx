@@ -1,5 +1,4 @@
 import { PixelCanvas } from "../../components/PixelCanvas";
-import { ToolPalette } from "../../components/ToolPalette";
 import type { CellData, Grid } from "../../models/grid";
 import type { LayerManager } from "../../models/layers";
 import type { Tool, ToolOptions } from "../../models/tools";
@@ -12,7 +11,6 @@ interface EditorSurfaceProps {
   toolOptions: ToolOptions;
   version: number;
   zoom: number;
-  onToolChange: (tool: Tool) => void;
   onZoomChange: (zoom: number) => void;
   onCursorChange: (value: { row: number; col: number } | null) => void;
   onStrokeComplete: (
@@ -34,7 +32,6 @@ export function EditorSurface({
   toolOptions,
   version,
   zoom,
-  onToolChange,
   onZoomChange,
   onCursorChange,
   onStrokeComplete,
@@ -42,16 +39,9 @@ export function EditorSurface({
   return (
     <section className="editor-layout">
       <div className="editor-canvas">
-        <div className="section-header">Editor</div>
-        <div className="editor-ribbon">
-          <div className="editor-ribbon-group">
-            <span className="editor-ribbon-label">Tools</span>
-            <ToolPalette activeTool={activeTool} onToolChange={onToolChange} />
-          </div>
-          <div className="editor-ribbon-group editor-ribbon-right">
-            <span className="editor-ribbon-label">Zoom</span>
-            <span className="editor-ribbon-value">{Math.round(zoom * 100)}%</span>
-          </div>
+        <div className="section-header section-header-split">
+          <span>Editor</span>
+          <span className="editor-header-zoom">{Math.round(zoom * 100)}%</span>
         </div>
         <PixelCanvas
           grid={grid}
