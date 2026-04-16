@@ -835,7 +835,7 @@ h3 {
   display: flex;
   align-items: center;
   gap: 3px;
-  padding-left: 12px;
+  padding-left: 0;
 }
 
 .inspector-export-btns {
