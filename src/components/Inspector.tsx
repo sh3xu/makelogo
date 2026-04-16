@@ -1,6 +1,5 @@
 import type { PngScale } from "../export/png";
 import type { Layer } from "../models/layers";
-import { ROTATION_PRESETS } from "../models/rotation";
 import type { SymmetryMode, ToolOptions } from "../models/tools";
 import { Tool } from "../models/tools";
 import type { SmoothingMode } from "../smoothing/slider";
@@ -225,6 +224,11 @@ export function LayersSection({
   onAddLayer,
   onRotateLayer,
 }: LayersSectionProps) {
+  function normalizeRotation(degrees: number) {
+    const normalized = degrees % 360;
+    return normalized < 0 ? normalized + 360 : normalized;
+  }
+
   return (
     <div className="inspector-section">
       <span className="inspector-label">Layers</span>
@@ -255,27 +259,48 @@ export function LayersSection({
             {layer.name}
           </button>
           <div className="layer-rotation">
-            {ROTATION_PRESETS.map((deg) => (
-              <button
-                key={deg}
-                type="button"
-                className={`btn btn-xs${layer.rotation === deg ? " btn-active" : ""}`}
-                onClick={() => onRotateLayer(layer.id, deg)}
-                title={`${deg}°`}
+            <button
+              type="button"
+              className="btn btn-xs btn-icon"
+              title="Rotate left"
+              aria-label={`Rotate ${layer.name} left`}
+              onClick={() => onRotateLayer(layer.id, normalizeRotation(layer.rotation - 15))}
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                {deg}°
-              </button>
-            ))}
-            <input
-              className="input input-xs"
-              type="number"
-              min={0}
-              max={360}
-              step={15}
-              value={layer.rotation}
-              onChange={(e) => onRotateLayer(layer.id, Number(e.target.value) || 0)}
-              aria-label={`${layer.name} rotation`}
-            />
+                <path d="M4 4H1.5V1.5" />
+                <path d="M2 4a5 5 0 1 1 2 8" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="btn btn-xs btn-icon"
+              title="Rotate right"
+              aria-label={`Rotate ${layer.name} right`}
+              onClick={() => onRotateLayer(layer.id, normalizeRotation(layer.rotation + 15))}
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M10 4h2.5V1.5" />
+                <path d="M12 4a5 5 0 1 0-2 8" />
+              </svg>
+            </button>
           </div>
         </div>
       ))}
