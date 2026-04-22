@@ -2,14 +2,14 @@ import type { SmoothedLayerResult } from "../smoothing/slider";
 import type { BackgroundOption } from "./background";
 import { generateSvgWithBackground } from "./background";
 import { type PngScale, rasterizeSvgToPng } from "./png";
-import { generateAdaptiveSvg, generateModeSvg } from "./svg";
+import { generateModeSvg, generateSvg } from "./svg";
 
 export interface ExportConfig {
   width: number;
   height: number;
   layers: SmoothedLayerResult[];
   background: BackgroundOption;
-  mode: "light" | "dark" | "adaptive";
+  mode: "light" | "dark" | "no-bg";
   lightBg: string;
   darkBg: string;
   lightFg: string;
@@ -20,14 +20,8 @@ export interface ExportConfig {
  * Generate SVG string respecting mode and background settings.
  */
 export function exportSvg(config: ExportConfig): string {
-  if (config.mode === "adaptive") {
-    return generateAdaptiveSvg(
-      { width: config.width, height: config.height, layers: config.layers },
-      config.lightBg,
-      config.darkBg,
-      config.lightFg,
-      config.darkFg,
-    );
+  if (config.mode === "no-bg") {
+    return generateSvg({ width: config.width, height: config.height, layers: config.layers });
   }
 
   const bg = config.mode === "light" ? config.lightBg : config.darkBg;

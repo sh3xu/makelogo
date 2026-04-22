@@ -228,6 +228,152 @@ export function smoothContourSubdivision(contour: Contour, alpha: number): Smoot
 }
 
 /**
+ * Detect if a contour is roughly circular/convex (no dominant stroke axis).
+ * Uses the ratio of eigenvalues from PCA — if they're close, it's a blob/circle.
+ */
+function isRoundShape(points: Point[]): boolean {
+  const cx = points.reduce((s, p) => s + p.x, 0) / points.length;
+  const cy = points.reduce((s, p) => s + p.y, 0) / points.length;
+  let xx = 0, xy = 0, yy = 0;
+  for (const p of points) {
+    const dx = p.x - cx, dy = p.y - cy;
+    xx += dx * dx; xy += dx * dy; yy += dy * dy;
+  }
+  // Eigenvalues of 2x2 covariance matrix
+  const trace = xx + yy;
+  const det = xx * yy - xy * xy;
+  const disc = Math.sqrt(Math.max(0, (trace * trace) / 4 - det));
+  const l1 = trace / 2 + disc;
+  const l2 = trace / 2 - disc;
+  // If ratio is close to 1, shape has no dominant axis = round/blob
+  const ratio = l2 / (l1 + 1e-9);
+  return ratio > 0.45; // tweak: >0.45 = too round for bristle treatment
+}
+
+export function smoothContourHandbrush(contour: Contour, alpha: number): SmoothedPath {
+  const raw = contour.points;
+  if (raw.length < 3) return { segments: [], isHole: contour.isHole };
+
+  // REVERSED: high alpha = more stylized/chaotic, low alpha = subtle
+  const a = Math.max(0, Math.min(1, 1 - alpha));
+
+  const simplified = simplifyContour(raw);
+  if (simplified.length < 3) return { segments: [], isHole: contour.isHole };
+
+  // === Round/circular shapes: skip bristle deformation, just smooth flow ===
+  if (isRoundShape(simplified)) {
+    const passes = 2;
+    const subdivided = chaikinSubdivide(simplified, passes);
+    const rdpResult = rdpSimplify(subdivided, 0.03);
+    const tension = 0.45;
+    const segments = fitCubicBeziers(rdpResult, tension);
+    // Gentle ink drag only — no spikes
+    return {
+      isHole: contour.isHole,
+      segments: segments.map((seg) => ({
+        ...seg,
+        c2: {
+          x: seg.c2.x + (seg.p3.x - seg.c2.x) * 0.15,
+          y: seg.c2.y + (seg.p3.y - seg.c2.y) * 0.15,
+        },
+      })),
+    };
+  }
+
+  // === Stroke-shaped contours: full bristle treatment ===
+
+  // PCA: find stroke axis
+  const cx = simplified.reduce((s, p) => s + p.x, 0) / simplified.length;
+  const cy = simplified.reduce((s, p) => s + p.y, 0) / simplified.length;
+  let xx = 0, xy = 0, yy = 0;
+  for (const p of simplified) {
+    const dx = p.x - cx, dy = p.y - cy;
+    xx += dx * dx; xy += dx * dy; yy += dy * dy;
+  }
+  const angle = Math.atan2(2 * xy, xx - yy) / 2;
+  const axisX = Math.cos(angle);
+  const axisY = Math.sin(angle);
+  const perpX = -axisY;
+  const perpY = axisX;
+
+  const projections = simplified.map(p => ({
+    along: (p.x - cx) * axisX + (p.y - cy) * axisY,
+    across: (p.x - cx) * perpX + (p.y - cy) * perpY,
+    p,
+  }));
+  const minAlong = Math.min(...projections.map(p => p.along));
+  const maxAlong = Math.max(...projections.map(p => p.along));
+  const strokeLen = maxAlong - minAlong;
+
+  // Alpha reversed: a=1 (user alpha=0) is subtle, a=0 (user alpha=1) is wild
+  // More bristles and bigger spikes at high user alpha
+  const bristleCount = Math.floor(12 + (1 - a) * 20);   // 12–32 bristles
+  const spikeAmplitude = 0.15 + (1 - a) * 0.65;         // 0.15–0.8 units
+  const taperPower = 1.8 + a * 2.0;                      // sharper taper at low alpha
+
+  const deformed = simplified.map((p, i) => {
+    const proj = projections[i]!;
+    const t = strokeLen > 1e-6 ? (proj.along - minAlong) / strokeLen : 0.5;
+    const taper = Math.pow(4 * t * (1 - t), taperPower * 0.4);
+    const side = proj.across >= 0 ? 1 : -1;
+
+    const bristlePhase = (proj.along / (strokeLen + 1e-6)) * bristleCount * Math.PI * 2;
+    const spike =
+      Math.abs(Math.sin(bristlePhase * 1.0 + i * 0.7)) * 0.5 +
+      Math.abs(Math.sin(bristlePhase * 2.3 + i * 1.3)) * 0.3 +
+      Math.abs(Math.sin(bristlePhase * 0.4 + i * 2.1)) * 0.2;
+
+    const pushOut = spike * spikeAmplitude * taper * side;
+
+    return {
+      x: p.x + perpX * pushOut,
+      y: p.y + perpY * pushOut,
+    };
+  });
+
+  // Taper ends to sharp points
+  const tapered = deformed.map((p, i) => {
+    const proj = projections[i]!;
+    const t = strokeLen > 1e-6 ? (proj.along - minAlong) / strokeLen : 0.5;
+    const endness = Math.min(t, 1 - t) * 2;
+    const taperAmount = Math.max(0, 1 - Math.pow(endness, 1 / taperPower));
+    const acrossCurrent = (p.x - cx) * perpX + (p.y - cy) * perpY;
+    return {
+      x: p.x - perpX * acrossCurrent * taperAmount,
+      y: p.y - perpY * acrossCurrent * taperAmount,
+    };
+  });
+
+  // Subdivision: FEWER passes at high alpha (preserve spiky chaos)
+  const passes = 1 + Math.floor(a * 2); // reversed: more passes when subtle
+  const subdivided = chaikinSubdivide(tapered, passes);
+
+  // RDP: tighter at high alpha (keep more spikes)
+  const epsilon = 0.006 + a * 0.018; // reversed: looser when subtle
+  const rdpResult = rdpSimplify(subdivided, epsilon);
+
+  // Tension: low always — spiky not bubbly
+  const tension = 0.15 + a * 0.12;
+  const baseSegments = fitCubicBeziers(rdpResult, tension);
+
+  // Ink drag on exit handles — stronger toward stroke end
+  return {
+    isHole: contour.isHole,
+    segments: baseSegments.map((seg, i) => {
+      const t = i / Math.max(baseSegments.length - 1, 1);
+      const dragAmount = 0.08 + t * (0.3 + (1 - a) * 0.25); // more drag at high alpha
+      return {
+        ...seg,
+        c2: {
+          x: seg.c2.x + (seg.p3.x - seg.c2.x) * dragAmount,
+          y: seg.c2.y + (seg.p3.y - seg.c2.y) * dragAmount,
+        },
+      };
+    }),
+  };
+}
+
+/**
  * Convert a SmoothedPath to an SVG path data string.
  */
 export function pathToSvgD(path: SmoothedPath): string {

@@ -47,6 +47,21 @@ describe("computeSmoothedPaths (T-016)", () => {
     }
   });
 
+  it("handbrush mode is visibly different from smooth mode", () => {
+    const { grid, lm } = setup();
+    const smooth = computeSmoothedPaths(grid, lm, 0.8, "smooth");
+    const handbrush = computeSmoothedPaths(grid, lm, 0.8, "handbrush");
+
+    const smoothFirst = smooth[0]?.paths[0]?.segments[0];
+    const handbrushFirst = handbrush[0]?.paths[0]?.segments[0];
+
+    expect(smoothFirst).toBeDefined();
+    expect(handbrushFirst).toBeDefined();
+    expect(
+      handbrushFirst?.c1.x === smoothFirst?.c1.x && handbrushFirst?.c1.y === smoothFirst?.c1.y,
+    ).toBe(false);
+  });
+
   it("result includes color for each path", () => {
     const { grid, lm } = setup();
     const result = computeSmoothedPaths(grid, lm, 0.5);

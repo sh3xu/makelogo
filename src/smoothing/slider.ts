@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Grid } from "../models/grid";
 import type { LayerManager } from "../models/layers";
-import { type SmoothedPath, smoothContour, smoothContourSubdivision } from "./bezier";
+import { type SmoothedPath, smoothContour, smoothContourSubdivision, smoothContourHandbrush } from "./bezier";
 import { extractAllLayerContours } from "./multicolor";
+import type { Contour } from "./contour";
 
 export interface SmoothedLayerResult {
   layerId: string;
@@ -10,7 +11,22 @@ export interface SmoothedLayerResult {
   rotation: number;
 }
 
-export type SmoothingMode = "squircle" | "smooth";
+export type SmoothingMode = "pixel" | "squircle" | "smooth" | "handbrush";
+
+// Each mode declares its own smoother + stylizer + alpha transform — no external conditions
+const MODE_CONFIG: Record<
+  SmoothingMode,
+  {
+    smoother: (contour: Contour, alpha: number) => SmoothedPath;
+    alphaTransform: (a: number) => number;
+  }
+> = {
+  pixel:     { smoother: smoothContour,             alphaTransform: () => 0  },
+  squircle:  { smoother: smoothContour,             alphaTransform: (a) => a },
+  smooth:    { smoother: smoothContourSubdivision,  alphaTransform: (a) => a },
+  handbrush: { smoother: smoothContourHandbrush,    alphaTransform: (a) => a },
+  //              ↑ owns its entire pipeline, no stylizer needed at all
+};
 
 export function computeSmoothedPaths(
   grid: Grid,
@@ -19,14 +35,15 @@ export function computeSmoothedPaths(
   mode: SmoothingMode = "squircle",
 ): SmoothedLayerResult[] {
   const layerContours = extractAllLayerContours(grid, layerManager);
-  const smoother = mode === "smooth" ? smoothContourSubdivision : smoothContour;
+  const { smoother, alphaTransform } = MODE_CONFIG[mode];
+  const adjustedAlpha = alphaTransform(alpha);
 
   return layerContours.map((lc) => {
     const layer = layerManager.getLayer(lc.layerId);
     return {
       layerId: lc.layerId,
       paths: lc.contours.map((c) => ({
-        ...smoother(c, alpha),
+        ...smoother(c, adjustedAlpha),
         color: c.color,
       })),
       rotation: layer?.rotation ?? 0,

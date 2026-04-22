@@ -141,9 +141,21 @@ export function PixelCanvas({
     ctx.save();
     ctx.translate(panRef.current.x, panRef.current.y);
 
+    const totalSize = cellSize * n;
+    const centerPx = totalSize / 2;
+    const activeLayer = layerManager.getActiveLayer();
+    const activeRotation = activeLayer.rotation;
+
+    // Working plane (checker + guide grid) follows active-layer rotation
+    ctx.save();
+    if (activeRotation !== 0) {
+      ctx.translate(centerPx, centerPx);
+      ctx.rotate((activeRotation * Math.PI) / 180);
+      ctx.translate(-centerPx, -centerPx);
+    }
+
     // Checkerboard
     const cs = Math.max(cellSize, 8);
-    const totalSize = cellSize * n;
     const checkerCols = Math.ceil(totalSize / cs);
     for (let r = 0; r < checkerCols; r++) {
       for (let c = 0; c < checkerCols; c++) {
@@ -152,9 +164,26 @@ export function PixelCanvas({
       }
     }
 
+    // Grid lines
+    if (cellSize >= 6) {
+      ctx.strokeStyle = "rgba(255,255,255,0.05)";
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= n; i++) {
+        const pos = i * cellSize + 0.25;
+        ctx.beginPath();
+        ctx.moveTo(pos, 0);
+        ctx.lineTo(pos, totalSize);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, pos);
+        ctx.lineTo(totalSize, pos);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+
     // Filled cells — render per-layer with rotation
     const visibleLayers = layerManager.getVisibleLayers();
-    const centerPx = (n * cellSize) / 2;
 
     for (const layer of visibleLayers) {
       ctx.save();
@@ -175,29 +204,11 @@ export function PixelCanvas({
       ctx.restore();
     }
 
-    // Grid lines
-    if (cellSize >= 6) {
-      ctx.strokeStyle = "rgba(255,255,255,0.05)";
-      ctx.lineWidth = 0.5;
-      for (let i = 0; i <= n; i++) {
-        const pos = i * cellSize + 0.25;
-        ctx.beginPath();
-        ctx.moveTo(pos, 0);
-        ctx.lineTo(pos, totalSize);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(0, pos);
-        ctx.lineTo(totalSize, pos);
-        ctx.stroke();
-      }
-    }
-
     // Ghost + hover should match active-layer rotation
-    const activeLayer = layerManager.getActiveLayer();
     ctx.save();
-    if (activeLayer.rotation !== 0) {
+    if (activeRotation !== 0) {
       ctx.translate(centerPx, centerPx);
-      ctx.rotate((activeLayer.rotation * Math.PI) / 180);
+      ctx.rotate((activeRotation * Math.PI) / 180);
       ctx.translate(-centerPx, -centerPx);
     }
 
@@ -214,15 +225,18 @@ export function PixelCanvas({
     const hover = hoverRef.current;
     if (hover && !strokeRef.current && !shapeDragRef.current) {
       ctx.fillStyle = "rgba(99, 102, 241, 0.18)";
-      ctx.fillRect(hover.col * cellSize, hover.row * cellSize, cellSize, cellSize);
+      const hoverCells =
+        activeTool === Tool.Draw || activeTool === Tool.Erase
+          ? expandBrush([hover], toolOptions.brushSize, n)
+          : [hover];
+      for (const { row, col } of hoverCells) {
+        ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+      }
       ctx.strokeStyle = "rgba(99, 102, 241, 0.4)";
       ctx.lineWidth = 1;
-      ctx.strokeRect(
-        hover.col * cellSize + 0.5,
-        hover.row * cellSize + 0.5,
-        cellSize - 1,
-        cellSize - 1,
-      );
+      for (const { row, col } of hoverCells) {
+        ctx.strokeRect(col * cellSize + 0.5, row * cellSize + 0.5, cellSize - 1, cellSize - 1);
+      }
     }
 
     ctx.restore(); // pan
