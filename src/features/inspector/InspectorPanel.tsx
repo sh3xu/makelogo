@@ -11,7 +11,7 @@ import type { Layer } from "../../models/layers";
 import type { SymmetryMode, Tool, ToolOptions } from "../../models/tools";
 import type { SmoothingMode } from "../../smoothing/slider";
 
-type ExportMode = "light" | "dark" | "adaptive";
+type ExportMode = "light" | "dark" | "no-bg";
 
 interface InspectorPanelProps {
   activeTool: Tool;

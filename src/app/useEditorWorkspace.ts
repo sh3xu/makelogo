@@ -13,7 +13,7 @@ import { DEFAULT_TOOL_OPTIONS, Tool } from "../models/tools";
 import type { SmoothedLayerResult, SmoothingMode } from "../smoothing/slider";
 import { computeSmoothedPaths } from "../smoothing/slider";
 
-type ExportMode = "light" | "dark" | "adaptive";
+type ExportMode = "light" | "dark" | "no-bg";
 
 export function useEditorWorkspace() {
   const gridRef = useRef(new Grid(16));
@@ -21,11 +21,11 @@ export function useEditorWorkspace() {
   const historyRef = useRef(new History());
 
   const [version, setVersion] = useState(0);
-  const [activeColor, setActiveColor] = useState("#000000");
+  const [activeColor, setActiveColor] = useState("#ffffff");
   const [alpha, setAlpha] = useState(0.5);
   const [smoothingMode, setSmoothingMode] = useState<SmoothingMode>("smooth");
   const [smoothedResult, setSmoothedResult] = useState<SmoothedLayerResult[]>([]);
-  const [exportMode, setExportMode] = useState<ExportMode>("light");
+  const [exportMode, setExportMode] = useState<ExportMode>("no-bg");
   const [gridSizeInput, setGridSizeInput] = useState("16");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [activeTool, setActiveTool] = useState<Tool>(Tool.Draw);

@@ -38,7 +38,7 @@ export function generateFilename(
   format: "svg" | "png",
   options?: {
     scale?: PngScale;
-    mode?: "light" | "dark" | "adaptive";
+    mode?: "light" | "dark" | "no-bg";
     baseName?: string;
   },
 ): string {

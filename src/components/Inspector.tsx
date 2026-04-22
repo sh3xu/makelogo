@@ -7,7 +7,7 @@ import { Tool } from "../models/tools";
 import type { SmoothingMode } from "../smoothing/slider";
 import { SegmentedControl } from "./SegmentedControl";
 
-type ExportMode = "light" | "dark" | "adaptive";
+type ExportMode = "light" | "dark" | "no-bg";
 
 export interface InspectorProps {
   // Tool options
@@ -179,6 +179,8 @@ interface ColorSectionProps {
 }
 
 export function ColorSection({ activeColor, onColorChange }: ColorSectionProps) {
+  const iconColor = getContrastingColor(activeColor);
+
   return (
     <div className="inspector-section">
       <span className="inspector-label">Color</span>
@@ -193,7 +195,23 @@ export function ColorSection({ activeColor, onColorChange }: ColorSectionProps) 
             aria-label={`Select color ${color}`}
           />
         ))}
-        <div className="color-input-wrap">
+        <div className="color-input-wrap" style={{ background: activeColor }}>
+          <svg
+            className="color-input-icon"
+            width="13"
+            height="13"
+            viewBox="0 0 14 14"
+            fill="none"
+            stroke={iconColor}
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M8.5 2.5 11.5 5.5 6.5 10.5 3.5 10.5 3.5 7.5 8.5 2.5z" />
+            <path d="M9.5 1.5 12.5 4.5" />
+            <path d="M2 12h10" />
+          </svg>
           <input
             type="color"
             className="color-input"
@@ -205,6 +223,16 @@ export function ColorSection({ activeColor, onColorChange }: ColorSectionProps) 
       </div>
     </div>
   );
+}
+
+function getContrastingColor(hex: string): string {
+  const cleaned = hex.replace("#", "");
+  if (cleaned.length !== 6) return "#ffffff";
+  const r = Number.parseInt(cleaned.slice(0, 2), 16);
+  const g = Number.parseInt(cleaned.slice(2, 4), 16);
+  const b = Number.parseInt(cleaned.slice(4, 6), 16);
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.55 ? "#111111" : "#f8fafc";
 }
 
 interface LayersSectionProps {
@@ -303,6 +331,9 @@ export function LayersSection({
                 <path d="M12 4a5 5 0 1 0-2 8" />
               </svg>
             </button>
+            <span className="layer-angle" aria-label={`${layer.name} rotation angle`}>
+              {layer.rotation}°
+            </span>
           </div>
         </div>
       ))}
@@ -336,12 +367,14 @@ export function SmoothingSection({
 }: SmoothingSectionProps) {
   return (
     <div className="inspector-section">
-      <span className="inspector-label">Smoothing</span>
+      <span className="inspector-label">Styling</span>
       <SegmentedControl
         size="sm"
         options={[
+          { value: "pixel", label: "Pixel" },
           { value: "squircle", label: "Squircle" },
           { value: "smooth", label: "Smooth" },
+          { value: "handbrush", label: "Brush" },
         ]}
         value={smoothingMode}
         onChange={onSmoothingModeChange}
@@ -355,7 +388,7 @@ export function SmoothingSection({
           step="0.01"
           value={alpha}
           onChange={(e) => onAlphaChange(parseFloat(e.target.value))}
-          aria-label="Smoothing amount"
+          aria-label="Styling intensity"
         />
         <span className="slider-value">{alpha.toFixed(2)}</span>
       </div>
@@ -395,7 +428,7 @@ export function ExportSection({
         options={[
           { value: "light", label: "Light" },
           { value: "dark", label: "Dark" },
-          { value: "adaptive", label: "Auto" },
+          { value: "no-bg", label: "No-bg" },
         ]}
         value={exportMode}
         onChange={onExportModeChange}

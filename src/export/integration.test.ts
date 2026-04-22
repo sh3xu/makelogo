@@ -32,9 +32,9 @@ const BASE_CONFIG: ExportConfig = {
 };
 
 describe("exportSvg integration (T-021)", () => {
-  it("adaptive mode includes media query", () => {
-    const svg = exportSvg({ ...BASE_CONFIG, mode: "adaptive" });
-    expect(svg).toContain("prefers-color-scheme");
+  it("no-bg mode omits background rect", () => {
+    const svg = exportSvg({ ...BASE_CONFIG, mode: "no-bg" });
+    expect(svg).not.toContain("<rect");
   });
 
   it("light mode has no media query", () => {
