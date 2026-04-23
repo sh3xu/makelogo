@@ -38,8 +38,6 @@ Open `http://localhost:5173`.
 | `pnpm test:watch` | Run tests in watch mode |
 | `pnpm check` | Run Biome checks on `src` |
 | `pnpm format` | Auto-fix formatting/lint issues in `src` |
-| `pnpm deploy` | Deploy `dist` to GitHub Pages |
-
 
 ## Project Structure
 
@@ -63,11 +61,6 @@ Grid State -> Contour Extraction -> Smoothing/Styling -> Export (SVG/PNG)
 
 The editing model and export pipeline are intentionally separated so export style changes do not mutate source drawing data.
 
-## Deployment Notes
-
-- Vite `base` is configured as `/glyph-editor/` for GitHub Pages.
-- `homepage` in `package.json` points to the published site URL.
-- Use `pnpm build && pnpm deploy` to publish updates.
 
 ## License
 
