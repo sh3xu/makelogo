@@ -1,8 +1,10 @@
-# Logo Designer
+# Glyph Editor
 
-Browser-based logo editor for drawing pixel-grid artwork and exporting polished assets as SVG and PNG.
+Browser-based glyph editor for drawing pixel-grid artwork and exporting polished assets as SVG and PNG.
 
-- Live app: [https://sh3xu.github.io/makelogo/](https://sh3xu.github.io/makelogo/)
+- Repository: [https://github.com/sh3xu/glyph-editor](https://github.com/sh3xu/glyph-editor)
+
+- Live app: [https://sh3xu.github.io/glyph-editor/](https://sh3xu.github.io/glyph-editor/)
 - Local-first: no backend required
 - Stack: React + TypeScript + Vite
 
@@ -63,7 +65,7 @@ The editing model and export pipeline are intentionally separated so export styl
 
 ## Deployment Notes
 
-- Vite `base` is configured as `/makelogo/` for GitHub Pages.
+- Vite `base` is configured as `/glyph-editor/` for GitHub Pages.
 - `homepage` in `package.json` points to the published site URL.
 - Use `pnpm build && pnpm deploy` to publish updates.
 
