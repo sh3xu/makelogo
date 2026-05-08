@@ -675,8 +675,9 @@ h3 {
   display: flex;
   align-items: center;
   gap: var(--sp-1);
+  justify-content: space-between;
   height: 26px;
-  padding: 0 var(--sp-2) 0 var(--sp-1);
+  padding: 0 6px 0 var(--sp-2);
   font-size: 11px;
   font-weight: 500;
   color: var(--text-secondary);
@@ -698,22 +699,42 @@ h3 {
   border-color: var(--accent);
 }
 
-.layer-vis {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--success);
+.layer-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.layer-item-end {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+}
+
+.layer-eye-btn {
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
   cursor: pointer;
-  transition: background 80ms;
+  padding: 0;
 }
 
-.layer-vis:hover {
-  opacity: 0.7;
+.layer-eye-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
 }
 
-.layer-vis-hidden {
-  background: var(--text-muted);
+.layer-eye-btn-hidden {
+  color: var(--text-muted);
 }
 
 /* Slider */
