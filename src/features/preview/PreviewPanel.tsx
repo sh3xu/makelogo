@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { CloseIcon, ExpandIcon } from "../../components/icons";
 import { Preview } from "../../components/Preview";
 import type { SmoothedLayerResult } from "../../smoothing/slider";
 
@@ -34,18 +35,7 @@ export function PreviewPanel({ smoothedResult, gridSize }: PreviewPanelProps) {
           aria-label="Full screen preview"
           onClick={() => setIsFullscreen(true)}
         >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 14 14"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M5.5 2H2v3.5M8.5 2H12v3.5M12 8.5V12H8.5M2 8.5V12h3.5" />
-          </svg>
+          <ExpandIcon />
         </button>
       </div>
       <Preview smoothedResult={smoothedResult} gridSize={gridSize} />
@@ -61,18 +51,7 @@ export function PreviewPanel({ smoothedResult, gridSize }: PreviewPanelProps) {
               aria-label="Close full screen preview"
               onClick={() => setIsFullscreen(false)}
             >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 14 14"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 3l8 8M11 3 3 11" />
-              </svg>
+              <CloseIcon />
             </button>
           </div>
           <div className="fullscreen-body">

@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Grid } from "../models/grid";
 import type { LayerManager } from "../models/layers";
-import { type SmoothedPath, smoothContour, smoothContourSubdivision, smoothContourHandbrush } from "./bezier";
-import { extractAllLayerContours } from "./multicolor";
+import {
+  type SmoothedPath,
+  smoothContour,
+  smoothContourHandbrush,
+  smoothContourSubdivision,
+} from "./bezier";
 import type { Contour } from "./contour";
+import { extractAllLayerContours } from "./multicolor";
 
 export interface SmoothedLayerResult {
   layerId: string;
@@ -21,10 +26,10 @@ const MODE_CONFIG: Record<
     alphaTransform: (a: number) => number;
   }
 > = {
-  pixel:     { smoother: smoothContour,             alphaTransform: () => 0  },
-  squircle:  { smoother: smoothContour,             alphaTransform: (a) => a },
-  smooth:    { smoother: smoothContourSubdivision,  alphaTransform: (a) => a },
-  handbrush: { smoother: smoothContourHandbrush,    alphaTransform: (a) => a },
+  pixel: { smoother: smoothContour, alphaTransform: () => 0 },
+  squircle: { smoother: smoothContour, alphaTransform: (a) => a },
+  smooth: { smoother: smoothContourSubdivision, alphaTransform: (a) => a },
+  handbrush: { smoother: smoothContourHandbrush, alphaTransform: (a) => a },
   //              ↑ owns its entire pipeline, no stylizer needed at all
 };
 

@@ -5,6 +5,7 @@ import type { Layer } from "../models/layers";
 import type { SymmetryMode, ToolOptions } from "../models/tools";
 import { Tool } from "../models/tools";
 import type { SmoothingMode } from "../smoothing/slider";
+import { ColorPickerIcon, EyeIcon, EyeOffIcon, RotateLeftIcon, RotateRightIcon } from "./icons";
 import { SegmentedControl } from "./SegmentedControl";
 
 type ExportMode = "light" | "dark" | "no-bg";
@@ -196,22 +197,7 @@ export function ColorSection({ activeColor, onColorChange }: ColorSectionProps) 
           />
         ))}
         <div className="color-input-wrap" style={{ background: activeColor }}>
-          <svg
-            className="color-input-icon"
-            width="13"
-            height="13"
-            viewBox="0 0 14 14"
-            fill="none"
-            stroke={iconColor}
-            strokeWidth="1.4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M8.5 2.5 11.5 5.5 6.5 10.5 3.5 10.5 3.5 7.5 8.5 2.5z" />
-            <path d="M9.5 1.5 12.5 4.5" />
-            <path d="M2 12h10" />
-          </svg>
+          <ColorPickerIcon className="color-input-icon" stroke={iconColor} aria-hidden="true" />
           <input
             type="color"
             className="color-input"
@@ -264,30 +250,31 @@ export function LayersSection({
       <span className="inspector-label">Layers</span>
       {layers.map((layer) => (
         <div key={layer.id} className="inspector-layer">
-          <button
-            type="button"
-            className={`layer-item${layer.id === activeLayerId ? " layer-item-active" : ""}`}
-            onClick={() => onSelectLayer(layer.id)}
-          >
-            <span
-              className={`layer-vis${!layer.visible ? " layer-vis-hidden" : ""}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleVisibility(layer.id);
-              }}
-              role="switch"
-              aria-checked={layer.visible}
-              aria-label={`Toggle ${layer.name} visibility`}
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
+          <div className={`layer-item${layer.id === activeLayerId ? " layer-item-active" : ""}`}>
+            <button
+              type="button"
+              className="layer-select-btn"
+              onClick={() => onSelectLayer(layer.id)}
+              aria-label={`Select ${layer.name}`}
+            >
+              <span className="layer-name">{layer.name}</span>
+            </button>
+            <span className="layer-item-end">
+              <button
+                type="button"
+                className={`layer-eye-btn${!layer.visible ? " layer-eye-btn-hidden" : ""}`}
+                onClick={(e) => {
                   e.stopPropagation();
                   onToggleVisibility(layer.id);
-                }
-              }}
-            />
-            {layer.name}
-          </button>
+                }}
+                aria-pressed={layer.visible}
+                aria-label={`${layer.visible ? "Hide" : "Show"} ${layer.name}`}
+                title={layer.visible ? "Hide layer" : "Show layer"}
+              >
+                {layer.visible ? <EyeIcon aria-hidden="true" /> : <EyeOffIcon aria-hidden="true" />}
+              </button>
+            </span>
+          </div>
           <div className="layer-rotation">
             <button
               type="button"
@@ -296,19 +283,7 @@ export function LayersSection({
               aria-label={`Rotate ${layer.name} left`}
               onClick={() => onRotateLayer(layer.id, normalizeRotation(layer.rotation - 15))}
             >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 14 14"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M4 4H1.5V1.5" />
-                <path d="M2 4a5 5 0 1 1 2 8" />
-              </svg>
+              <RotateLeftIcon />
             </button>
             <button
               type="button"
@@ -317,19 +292,7 @@ export function LayersSection({
               aria-label={`Rotate ${layer.name} right`}
               onClick={() => onRotateLayer(layer.id, normalizeRotation(layer.rotation + 15))}
             >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 14 14"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M10 4h2.5V1.5" />
-                <path d="M12 4a5 5 0 1 0-2 8" />
-              </svg>
+              <RotateRightIcon />
             </button>
             <span className="layer-angle" aria-label={`${layer.name} rotation angle`}>
               {layer.rotation}°
