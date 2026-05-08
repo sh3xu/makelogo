@@ -1,13 +1,6 @@
 import type { JSX } from "react";
-import {
-  DrawIcon,
-  EllipseIcon,
-  EraseIcon,
-  FillIcon,
-  LineIcon,
-  RectangleIcon,
-} from "./icons";
 import { Tool } from "../models/tools";
+import { DrawIcon, EllipseIcon, EraseIcon, FillIcon, LineIcon, RectangleIcon } from "./icons";
 
 interface ToolPaletteProps {
   activeTool: Tool;

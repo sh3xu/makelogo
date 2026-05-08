@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Preview } from "../../components/Preview";
 import { CloseIcon, ExpandIcon } from "../../components/icons";
+import { Preview } from "../../components/Preview";
 import type { SmoothedLayerResult } from "../../smoothing/slider";
 
 interface PreviewPanelProps {

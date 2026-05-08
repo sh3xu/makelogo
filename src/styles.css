@@ -707,6 +707,21 @@ h3 {
   text-overflow: ellipsis;
 }
 
+.layer-select-btn {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  cursor: pointer;
+}
+
 .layer-item-end {
   display: inline-flex;
   align-items: center;

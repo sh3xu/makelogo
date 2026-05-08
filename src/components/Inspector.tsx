@@ -5,13 +5,7 @@ import type { Layer } from "../models/layers";
 import type { SymmetryMode, ToolOptions } from "../models/tools";
 import { Tool } from "../models/tools";
 import type { SmoothingMode } from "../smoothing/slider";
-import {
-  ColorPickerIcon,
-  EyeIcon,
-  EyeOffIcon,
-  RotateLeftIcon,
-  RotateRightIcon,
-} from "./icons";
+import { ColorPickerIcon, EyeIcon, EyeOffIcon, RotateLeftIcon, RotateRightIcon } from "./icons";
 import { SegmentedControl } from "./SegmentedControl";
 
 type ExportMode = "light" | "dark" | "no-bg";
@@ -256,12 +250,15 @@ export function LayersSection({
       <span className="inspector-label">Layers</span>
       {layers.map((layer) => (
         <div key={layer.id} className="inspector-layer">
-          <button
-            type="button"
-            className={`layer-item${layer.id === activeLayerId ? " layer-item-active" : ""}`}
-            onClick={() => onSelectLayer(layer.id)}
-          >
-            <span className="layer-name">{layer.name}</span>
+          <div className={`layer-item${layer.id === activeLayerId ? " layer-item-active" : ""}`}>
+            <button
+              type="button"
+              className="layer-select-btn"
+              onClick={() => onSelectLayer(layer.id)}
+              aria-label={`Select ${layer.name}`}
+            >
+              <span className="layer-name">{layer.name}</span>
+            </button>
             <span className="layer-item-end">
               <button
                 type="button"
@@ -277,7 +274,7 @@ export function LayersSection({
                 {layer.visible ? <EyeIcon aria-hidden="true" /> : <EyeOffIcon aria-hidden="true" />}
               </button>
             </span>
-          </button>
+          </div>
           <div className="layer-rotation">
             <button
               type="button"

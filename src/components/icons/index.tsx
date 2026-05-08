@@ -13,7 +13,13 @@ const baseIconProps: IconProps = {
 
 export function DrawIcon(props: IconProps) {
   return (
-    <svg {...baseIconProps} strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <svg
+      {...baseIconProps}
+      strokeWidth={1.3}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
       <path d="M8.5 2.5l3 3-7.5 7.5H1v-3l7.5-7.5z" />
       <path d="M7 4l3 3" />
     </svg>
@@ -22,7 +28,13 @@ export function DrawIcon(props: IconProps) {
 
 export function EraseIcon(props: IconProps) {
   return (
-    <svg {...baseIconProps} strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <svg
+      {...baseIconProps}
+      strokeWidth={1.3}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
       <path d="M3.5 13h7M5 10.5L1.5 7a1.5 1.5 0 010-2.12l5-5a1.5 1.5 0 012.12 0L12.5 3.75a1.5 1.5 0 010 2.12L9 9.5" />
       <path d="M5 10.5l4-1" />
     </svg>
@@ -39,7 +51,13 @@ export function LineIcon(props: IconProps) {
 
 export function RectangleIcon(props: IconProps) {
   return (
-    <svg {...baseIconProps} strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <svg
+      {...baseIconProps}
+      strokeWidth={1.3}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
       <rect x="2" y="2" width="10" height="10" rx="0.5" />
     </svg>
   );
@@ -55,7 +73,13 @@ export function EllipseIcon(props: IconProps) {
 
 export function FillIcon(props: IconProps) {
   return (
-    <svg {...baseIconProps} strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <svg
+      {...baseIconProps}
+      strokeWidth={1.3}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
       <path d="M1.5 9.5l5-8 5 8a5 5 0 01-10 0z" />
       <path d="M12 10.5c0 .83.67 1.5 1 2s-.17 1.5-1 1.5-1-.67-1-1.5.67-1.5 1-2z" />
     </svg>
@@ -120,6 +144,7 @@ export function ColorPickerIcon(props: IconProps) {
       height="13"
       viewBox="0 0 14 14"
       fill="none"
+      stroke="currentColor"
       strokeWidth="1.4"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -139,6 +164,7 @@ export function EyeIcon(props: IconProps) {
       height="12"
       viewBox="0 0 14 14"
       fill="none"
+      stroke="currentColor"
       strokeWidth="1.4"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -157,6 +183,7 @@ export function EyeOffIcon(props: IconProps) {
       height="12"
       viewBox="0 0 14 14"
       fill="none"
+      stroke="currentColor"
       strokeWidth="1.4"
       strokeLinecap="round"
       strokeLinejoin="round"

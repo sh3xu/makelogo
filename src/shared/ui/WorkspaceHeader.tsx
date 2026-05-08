@@ -30,7 +30,7 @@ export function WorkspaceHeader({
   return (
     <header className="workspace-header">
       <div className="workspace-brand">
-        <h1>MakeLogo Studio</h1>
+        <h1>Glyph Studio</h1>
         <p>Vector-first logo design workspace</p>
       </div>
       <div className="workspace-actions">

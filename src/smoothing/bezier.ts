@@ -234,10 +234,15 @@ export function smoothContourSubdivision(contour: Contour, alpha: number): Smoot
 function isRoundShape(points: Point[]): boolean {
   const cx = points.reduce((s, p) => s + p.x, 0) / points.length;
   const cy = points.reduce((s, p) => s + p.y, 0) / points.length;
-  let xx = 0, xy = 0, yy = 0;
+  let xx = 0,
+    xy = 0,
+    yy = 0;
   for (const p of points) {
-    const dx = p.x - cx, dy = p.y - cy;
-    xx += dx * dx; xy += dx * dy; yy += dy * dy;
+    const dx = p.x - cx,
+      dy = p.y - cy;
+    xx += dx * dx;
+    xy += dx * dy;
+    yy += dy * dy;
   }
   // Eigenvalues of 2x2 covariance matrix
   const trace = xx + yy;
@@ -285,10 +290,15 @@ export function smoothContourHandbrush(contour: Contour, alpha: number): Smoothe
   // PCA: find stroke axis
   const cx = simplified.reduce((s, p) => s + p.x, 0) / simplified.length;
   const cy = simplified.reduce((s, p) => s + p.y, 0) / simplified.length;
-  let xx = 0, xy = 0, yy = 0;
+  let xx = 0,
+    xy = 0,
+    yy = 0;
   for (const p of simplified) {
-    const dx = p.x - cx, dy = p.y - cy;
-    xx += dx * dx; xy += dx * dy; yy += dy * dy;
+    const dx = p.x - cx,
+      dy = p.y - cy;
+    xx += dx * dx;
+    xy += dx * dy;
+    yy += dy * dy;
   }
   const angle = Math.atan2(2 * xy, xx - yy) / 2;
   const axisX = Math.cos(angle);
@@ -296,20 +306,20 @@ export function smoothContourHandbrush(contour: Contour, alpha: number): Smoothe
   const perpX = -axisY;
   const perpY = axisX;
 
-  const projections = simplified.map(p => ({
+  const projections = simplified.map((p) => ({
     along: (p.x - cx) * axisX + (p.y - cy) * axisY,
     across: (p.x - cx) * perpX + (p.y - cy) * perpY,
     p,
   }));
-  const minAlong = Math.min(...projections.map(p => p.along));
-  const maxAlong = Math.max(...projections.map(p => p.along));
+  const minAlong = Math.min(...projections.map((p) => p.along));
+  const maxAlong = Math.max(...projections.map((p) => p.along));
   const strokeLen = maxAlong - minAlong;
 
   // Alpha reversed: a=1 (user alpha=0) is subtle, a=0 (user alpha=1) is wild
   // More bristles and bigger spikes at high user alpha
-  const bristleCount = Math.floor(12 + (1 - a) * 20);   // 12–32 bristles
-  const spikeAmplitude = 0.15 + (1 - a) * 0.65;         // 0.15–0.8 units
-  const taperPower = 1.8 + a * 2.0;                      // sharper taper at low alpha
+  const bristleCount = Math.floor(12 + (1 - a) * 20); // 12–32 bristles
+  const spikeAmplitude = 0.15 + (1 - a) * 0.65; // 0.15–0.8 units
+  const taperPower = 1.8 + a * 2.0; // sharper taper at low alpha
 
   const deformed = simplified.map((p, i) => {
     const proj = projections[i]!;
