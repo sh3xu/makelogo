@@ -1,5 +1,5 @@
-export const LAYER_MIN_COUNT = 2;
-export const LAYER_MAX_COUNT = 3;
+export const LAYER_MIN_COUNT = 1;
+export const LAYER_MAX_COUNT = 4;
 
 export interface Layer {
   id: string;
