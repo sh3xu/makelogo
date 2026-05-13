@@ -37,6 +37,7 @@ export function AppShell() {
             toolOptions={state.toolOptions}
             version={state.version}
             zoom={state.zoom}
+            theme={state.theme}
             onZoomChange={actions.setZoom}
             onCursorChange={actions.setCursorPos}
             onStrokeComplete={actions.handleStrokeComplete}
