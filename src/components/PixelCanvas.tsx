@@ -157,8 +157,8 @@ export function PixelCanvas({
       ctx.translate(-centerPx, -centerPx);
     }
 
-    // NOTE: pull palette from CSS vars so the canvas follows light/dark theme.
-    const themeColors = getCanvasThemeColors(theme);
+    // NOTE: read CSS vars from the canvas itself so the nearest [data-theme]
+    const themeColors = getCanvasThemeColors(theme, canvas);
 
     const cs = Math.max(cellSize, 8);
     const checkerCols = Math.ceil(totalSize / cs);

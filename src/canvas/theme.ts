@@ -20,16 +20,20 @@ const LIGHT_FALLBACK: CanvasThemeColors = {
   gridLine: "rgba(0, 0, 0, 0.06)",
 };
 
-function readCssVar(name: string): string {
-  if (typeof window === "undefined") return "";
-  const value = getComputedStyle(document.documentElement).getPropertyValue(name);
+// NOTE: read from a specific element so the nearest [data-theme] 
+function readCssVar(name: string, element: Element | null): string {
+  if (typeof window === "undefined" || !element) return "";
+  const value = getComputedStyle(element).getPropertyValue(name);
   return value.trim();
 }
 
-export function getCanvasThemeColors(theme: CanvasTheme): CanvasThemeColors {
+export function getCanvasThemeColors(
+  theme: CanvasTheme,
+  element: Element | null = typeof document !== "undefined" ? document.body : null,
+): CanvasThemeColors {
   const fallback = theme === "light" ? LIGHT_FALLBACK : DARK_FALLBACK;
-  const checkerA = readCssVar("--checker-a") || fallback.checkerA;
-  const checkerB = readCssVar("--checker-b") || fallback.checkerB;
+  const checkerA = readCssVar("--checker-a", element) || fallback.checkerA;
+  const checkerB = readCssVar("--checker-b", element) || fallback.checkerB;
   const gridLine = theme === "light" ? "rgba(0, 0, 0, 0.06)" : "rgba(255, 255, 255, 0.05)";
   return { checkerA, checkerB, gridLine };
 }
