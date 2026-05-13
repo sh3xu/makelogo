@@ -8,6 +8,7 @@ import {
   rectangleCells,
 } from "../canvas/shapes";
 import { expandBrush, mirrorCells } from "../canvas/symmetry";
+import { type CanvasTheme, getCanvasThemeColors } from "../canvas/theme";
 import type { CellData, Grid } from "../models/grid";
 import type { LayerManager } from "../models/layers";
 import { inverseRotatePoint } from "../models/rotation";
@@ -52,6 +53,7 @@ interface PixelCanvasProps {
   onCursorChange: (pos: { row: number; col: number } | null) => void;
   zoom: number;
   onZoomChange: (zoom: number) => void;
+  theme: CanvasTheme;
 }
 
 export function PixelCanvas({
@@ -65,6 +67,7 @@ export function PixelCanvas({
   onCursorChange,
   zoom,
   onZoomChange,
+  theme,
 }: PixelCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -154,19 +157,20 @@ export function PixelCanvas({
       ctx.translate(-centerPx, -centerPx);
     }
 
-    // Checkerboard
+    // NOTE: pull palette from CSS vars so the canvas follows light/dark theme.
+    const themeColors = getCanvasThemeColors(theme);
+
     const cs = Math.max(cellSize, 8);
     const checkerCols = Math.ceil(totalSize / cs);
     for (let r = 0; r < checkerCols; r++) {
       for (let c = 0; c < checkerCols; c++) {
-        ctx.fillStyle = (r + c) % 2 === 0 ? "#1a1a1f" : "#151519";
+        ctx.fillStyle = (r + c) % 2 === 0 ? themeColors.checkerA : themeColors.checkerB;
         ctx.fillRect(c * cs, r * cs, cs, cs);
       }
     }
 
-    // Grid lines
     if (cellSize >= 6) {
-      ctx.strokeStyle = "rgba(255,255,255,0.05)";
+      ctx.strokeStyle = themeColors.gridLine;
       ctx.lineWidth = 0.5;
       for (let i = 0; i <= n; i++) {
         const pos = i * cellSize + 0.25;
@@ -242,10 +246,9 @@ export function PixelCanvas({
     ctx.restore(); // pan
   };
 
-  // Redraw on state changes
   useEffect(() => {
     redrawRef.current();
-  }, [version, maxSize, canvasPixels, zoom]);
+  }, [version, maxSize, canvasPixels, zoom, theme]);
 
   function getCell(e: MouseEvent<HTMLCanvasElement>) {
     const canvas = canvasRef.current;

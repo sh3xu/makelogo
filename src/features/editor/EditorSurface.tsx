@@ -1,3 +1,4 @@
+import type { CanvasTheme } from "../../canvas/theme";
 import { PixelCanvas } from "../../components/PixelCanvas";
 import type { CellData, Grid } from "../../models/grid";
 import type { LayerManager } from "../../models/layers";
@@ -11,6 +12,7 @@ interface EditorSurfaceProps {
   toolOptions: ToolOptions;
   version: number;
   zoom: number;
+  theme: CanvasTheme;
   onZoomChange: (zoom: number) => void;
   onCursorChange: (value: { row: number; col: number } | null) => void;
   onStrokeComplete: (
@@ -32,6 +34,7 @@ export function EditorSurface({
   toolOptions,
   version,
   zoom,
+  theme,
   onZoomChange,
   onCursorChange,
   onStrokeComplete,
@@ -51,6 +54,7 @@ export function EditorSurface({
           toolOptions={toolOptions}
           version={version}
           zoom={zoom}
+          theme={theme}
           onZoomChange={onZoomChange}
           onCursorChange={onCursorChange}
           onStrokeComplete={onStrokeComplete}
