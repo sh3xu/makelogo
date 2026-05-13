@@ -20,20 +20,22 @@ const LIGHT_FALLBACK: CanvasThemeColors = {
   gridLine: "rgba(0, 0, 0, 0.06)",
 };
 
-// NOTE: read from a specific element so the nearest [data-theme]
+// NOTE: theme tokens are scoped to [data-theme] on `.app-shell`, not on <html>.
+// Callers must pass an element inside the themed subtree (e.g. the canvas)
+// so CSS custom property inheritance resolves the active theme correctly.
 function readCssVar(name: string, element: Element | null): string {
   if (typeof window === "undefined" || !element) return "";
-  const value = getComputedStyle(element).getPropertyValue(name);
-  return value.trim();
+  return getComputedStyle(element).getPropertyValue(name).trim();
 }
 
 export function getCanvasThemeColors(
   theme: CanvasTheme,
-  element: Element | null = typeof document !== "undefined" ? document.body : null,
+  element: Element | null,
 ): CanvasThemeColors {
   const fallback = theme === "light" ? LIGHT_FALLBACK : DARK_FALLBACK;
-  const checkerA = readCssVar("--checker-a", element) || fallback.checkerA;
-  const checkerB = readCssVar("--checker-b", element) || fallback.checkerB;
-  const gridLine = theme === "light" ? "rgba(0, 0, 0, 0.06)" : "rgba(255, 255, 255, 0.05)";
-  return { checkerA, checkerB, gridLine };
+  return {
+    checkerA: readCssVar("--checker-a", element) || fallback.checkerA,
+    checkerB: readCssVar("--checker-b", element) || fallback.checkerB,
+    gridLine: fallback.gridLine,
+  };
 }
