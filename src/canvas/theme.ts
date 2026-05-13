@@ -20,7 +20,7 @@ const LIGHT_FALLBACK: CanvasThemeColors = {
   gridLine: "rgba(0, 0, 0, 0.06)",
 };
 
-// NOTE: read from a specific element so the nearest [data-theme] 
+// NOTE: read from a specific element so the nearest [data-theme]
 function readCssVar(name: string, element: Element | null): string {
   if (typeof window === "undefined" || !element) return "";
   const value = getComputedStyle(element).getPropertyValue(name);
