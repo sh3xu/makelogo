@@ -172,6 +172,25 @@ describe("LayerManager", () => {
     expect(LAYER_MAX_COUNT).toBe(3);
   });
 
+  it("insertLayerAt inserts at index and respects max count", () => {
+    const [l0, l1] = manager.layers;
+    manager.insertLayerAt(
+      { id: "mid", name: "Mid", visible: true, rotation: 0 },
+      1,
+    );
+    expect(manager.layers.length).toBe(3);
+    expect(manager.layers.map((l) => l.id).join(",")).toBe(`${l0!.id},mid,${l1!.id}`);
+    expect(() =>
+      manager.insertLayerAt({ id: "x", name: "X", visible: true, rotation: 0 }, 0),
+    ).toThrow();
+  });
+
+  it("insertLayerAt rejects out of range index", () => {
+    expect(() =>
+      manager.insertLayerAt({ id: "x", name: "X", visible: true, rotation: 0 }, 5),
+    ).toThrow(RangeError);
+  });
+
   it("switching active layer means subsequent draw ops target new layer", () => {
     const [l0, l1] = manager.layers;
     manager.setActiveLayer(l1!.id);

@@ -20,6 +20,7 @@ interface InspectorPanelProps {
   layers: readonly Layer[];
   activeLayerId: string;
   canAddLayer: boolean;
+  canRemoveLayer: boolean;
   alpha: number;
   smoothingMode: SmoothingMode;
   exportMode: ExportMode;
@@ -31,6 +32,7 @@ interface InspectorPanelProps {
   onToggleVisibility: (id: string) => void;
   onAddLayer: () => void;
   onRotateLayer: (id: string, degrees: number) => void;
+  onRemoveLayer: (id: string) => void;
   onAlphaChange: (value: number) => void;
   onSmoothingModeChange: (mode: SmoothingMode) => void;
   onExportModeChange: (mode: ExportMode) => void;
@@ -90,10 +92,12 @@ export function InspectorPanel(props: InspectorPanelProps) {
               layers={props.layers}
               activeLayerId={props.activeLayerId}
               canAddLayer={props.canAddLayer}
+              canRemoveLayer={props.canRemoveLayer}
               onSelectLayer={props.onSelectLayer}
               onToggleVisibility={props.onToggleVisibility}
               onAddLayer={props.onAddLayer}
               onRotateLayer={props.onRotateLayer}
+              onRemoveLayer={props.onRemoveLayer}
             />
             <SmoothingSection
               alpha={props.alpha}

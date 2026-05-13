@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { Grid } from "../models/grid";
 import { LayerManager } from "../models/layers";
-import { DrawStrokeCommand, History, ResizeCommand } from "./history";
+import { DrawStrokeCommand, History, RemoveLayerCommand, ResizeCommand } from "./history";
 import { resizeGrid } from "./resize";
 
 const L = "layer-1";
@@ -154,5 +154,85 @@ describe("History + ResizeCommand (T-009)", () => {
 
     history.redo();
     expect(grid.n).toBe(16);
+  });
+});
+
+describe("History + RemoveLayerCommand", () => {
+  it("undo restores removed layer, stack order, active layer, and pixels", () => {
+    const lm = new LayerManager([
+      { id: "a", name: "L1", visible: true, rotation: 0 },
+      { id: "b", name: "L2", visible: true, rotation: 0 },
+      { id: "c", name: "L3", visible: true, rotation: 0 },
+    ]);
+    const grid = new Grid(8);
+    for (const layer of lm.layers) {
+      grid.initLayer(layer.id);
+    }
+    lm.setActiveLayer("b");
+    grid.fillCell("b", 0, 0, RED);
+
+    const insertIndex = lm.layers.findIndex((l) => l.id === "b");
+    const activeLayerIdBefore = lm.activeLayerId;
+    const layerSnapshot = { ...lm.getLayer("b")! };
+    const cells = grid.getLayerCells("b").map((cell) => ({ ...cell }));
+
+    lm.removeLayer("b");
+    grid.removeLayer("b");
+
+    const history = new History();
+    history.push(
+      new RemoveLayerCommand(grid, lm, {
+        layer: layerSnapshot,
+        insertIndex,
+        cells,
+        activeLayerIdBefore,
+      }),
+    );
+
+    expect(lm.layers.length).toBe(2);
+    expect(lm.getLayer("b")).toBeUndefined();
+
+    history.undo();
+    expect(lm.layers.length).toBe(3);
+    expect(lm.layers.map((l) => l.id).join(",")).toBe("a,b,c");
+    expect(lm.activeLayerId).toBe("b");
+    expect(grid.getCell("b", 0, 0).filled).toBe(true);
+    expect(grid.getCell("b", 0, 0).color).toBe(RED);
+  });
+
+  it("redo removes the layer again", () => {
+    const lm = new LayerManager([
+      { id: "a", name: "L1", visible: true, rotation: 0 },
+      { id: "b", name: "L2", visible: true, rotation: 0 },
+      { id: "c", name: "L3", visible: true, rotation: 0 },
+    ]);
+    const grid = new Grid(8);
+    for (const layer of lm.layers) {
+      grid.initLayer(layer.id);
+    }
+    const insertIndex = 2;
+    const activeLayerIdBefore = lm.activeLayerId;
+    const layerSnapshot = { ...lm.getLayer("c")! };
+    const cells = grid.getLayerCells("c").map((cell) => ({ ...cell }));
+
+    lm.removeLayer("c");
+    grid.removeLayer("c");
+
+    const history = new History();
+    history.push(
+      new RemoveLayerCommand(grid, lm, {
+        layer: layerSnapshot,
+        insertIndex,
+        cells,
+        activeLayerIdBefore,
+      }),
+    );
+
+    history.undo();
+    expect(lm.getLayer("c")).toBeDefined();
+
+    history.redo();
+    expect(lm.getLayer("c")).toBeUndefined();
+    expect(lm.layers.length).toBe(2);
   });
 });

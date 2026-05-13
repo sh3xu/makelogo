@@ -96,6 +96,16 @@ export class LayerManager {
     }
   }
 
+  insertLayerAt(layer: Layer, index: number): void {
+    if (this._layers.length >= LAYER_MAX_COUNT) {
+      throw new Error(`Cannot insert layer: maximum of ${LAYER_MAX_COUNT} layers reached`);
+    }
+    if (index < 0 || index > this._layers.length) {
+      throw new RangeError(`insertLayerAt: index ${index} out of range for length ${this._layers.length}`);
+    }
+    this._layers.splice(index, 0, { ...layer });
+  }
+
   moveLayerUp(id: string): void {
     const idx = this._layerIndex(id);
     if (idx < this._layers.length - 1) {
