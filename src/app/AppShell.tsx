@@ -52,6 +52,7 @@ export function AppShell() {
             layers={state.layers}
             activeLayerId={state.activeLayerId}
             canAddLayer={state.canAddLayer}
+            canRemoveLayer={state.canRemoveLayer}
             alpha={state.alpha}
             smoothingMode={state.smoothingMode}
             exportMode={state.exportMode}
@@ -63,6 +64,7 @@ export function AppShell() {
             onToggleVisibility={actions.handleToggleVisibility}
             onAddLayer={actions.handleAddLayer}
             onRotateLayer={actions.handleRotateLayer}
+            onRemoveLayer={actions.handleRemoveLayer}
             onAlphaChange={actions.setAlpha}
             onSmoothingModeChange={actions.setSmoothingMode}
             onExportModeChange={actions.setExportMode}

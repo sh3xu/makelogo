@@ -727,6 +727,7 @@ h3 {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  gap: 2px;
 }
 
 .layer-eye-btn {
@@ -750,6 +751,31 @@ h3 {
 
 .layer-eye-btn-hidden {
   color: var(--text-muted);
+}
+
+.layer-trash-btn {
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.layer-trash-btn:hover:not(:disabled) {
+  color: var(--destructive, #ef4444);
+  background: var(--bg-hover);
+}
+
+.layer-trash-btn:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 /* Slider */

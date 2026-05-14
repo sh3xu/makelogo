@@ -197,6 +197,25 @@ export function EyeOffIcon(props: IconProps) {
   );
 }
 
+export function TrashIcon(props: IconProps) {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M2.5 3.5h9M5.5 3.5V2.5h3v1M4 3.5l.5 8h5l.5-8" />
+      <path d="M6 6.5v4M8 6.5v4" />
+    </svg>
+  );
+}
+
 export function RotateLeftIcon(props: IconProps) {
   return (
     <svg {...baseIconProps} strokeLinecap="round" strokeLinejoin="round" {...props}>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DrawStrokeCommand, History, ResizeCommand } from "../canvas/history";
+import { DrawStrokeCommand, History, RemoveLayerCommand, ResizeCommand } from "../canvas/history";
 import { resizeGrid } from "../canvas/resize";
 import { downloadPng, downloadSvg, generateFilename } from "../export/download";
 import type { ExportConfig } from "../export/integration";
@@ -7,7 +7,7 @@ import { exportPng, exportSvg } from "../export/integration";
 import type { PngScale } from "../export/png";
 import type { CellData } from "../models/grid";
 import { clampGridSize, GRID_MAX, GRID_MIN, Grid } from "../models/grid";
-import { LayerManager } from "../models/layers";
+import { LAYER_MAX_COUNT, LAYER_MIN_COUNT, LayerManager } from "../models/layers";
 import type { SymmetryMode, ToolOptions } from "../models/tools";
 import { DEFAULT_TOOL_OPTIONS, Tool } from "../models/tools";
 import type { SmoothedLayerResult, SmoothingMode } from "../smoothing/slider";
@@ -54,25 +54,44 @@ export function useEditorWorkspace() {
   }, [version, alpha, smoothingMode]);
 
   useEffect(() => {
+    function isUndoRedoTarget(target: EventTarget | null): boolean {
+      return (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        (target instanceof HTMLElement && target.isContentEditable)
+      );
+    }
+
     function handleKeyDown(event: KeyboardEvent) {
-      const modifier = event.metaKey || event.ctrlKey;
-      if (modifier && event.key === "z" && !event.shiftKey) {
-        event.preventDefault();
-        historyRef.current.undo();
-        setGridSizeInput(String(gridRef.current.n));
-        setVersion((current) => current + 1);
-        return;
+      const modifier = (event.metaKey || event.ctrlKey) && !event.altKey;
+      if (modifier) {
+        const zMatch = event.code === "KeyZ" || event.key.toLowerCase() === "z";
+        const yMatch = event.code === "KeyY" || event.key.toLowerCase() === "y";
+        const isUndo = zMatch && !event.shiftKey;
+        const isRedo = yMatch || (zMatch && event.shiftKey);
+
+        if ((isUndo || isRedo) && isUndoRedoTarget(event.target)) {
+          return;
+        }
+
+        if (isUndo) {
+          event.preventDefault();
+          historyRef.current.undo();
+          setGridSizeInput(String(gridRef.current.n));
+          setVersion((current) => current + 1);
+          return;
+        }
+
+        if (isRedo) {
+          event.preventDefault();
+          historyRef.current.redo();
+          setGridSizeInput(String(gridRef.current.n));
+          setVersion((current) => current + 1);
+          return;
+        }
       }
 
-      if (modifier && (event.key === "y" || (event.key === "z" && event.shiftKey))) {
-        event.preventDefault();
-        historyRef.current.redo();
-        setGridSizeInput(String(gridRef.current.n));
-        setVersion((current) => current + 1);
-        return;
-      }
-
-      if (modifier || event.shiftKey) {
+      if (event.metaKey || event.ctrlKey || event.shiftKey) {
         return;
       }
 
@@ -194,6 +213,39 @@ export function useEditorWorkspace() {
     [bump],
   );
 
+  const handleRemoveLayer = useCallback(
+    (id: string) => {
+      const lm = layerManagerRef.current;
+      const grid = gridRef.current;
+      if (lm.layers.length <= LAYER_MIN_COUNT) {
+        return;
+      }
+      const layer = lm.getLayer(id);
+      if (!layer) {
+        return;
+      }
+      const insertIndex = lm.layers.findIndex((l) => l.id === id);
+      const activeLayerIdBefore = lm.activeLayerId;
+      const layerSnapshot = { ...layer };
+      const cells = grid.getLayerCells(id).map((c) => ({ ...c }));
+
+      lm.removeLayer(id);
+      grid.removeLayer(id);
+
+      historyRef.current.push(
+        new RemoveLayerCommand(grid, lm, {
+          layer: layerSnapshot,
+          insertIndex,
+          cells,
+          activeLayerIdBefore,
+        }),
+      );
+      setGridSizeInput(String(grid.n));
+      bump();
+    },
+    [bump],
+  );
+
   const handleBrushSizeChange = useCallback((size: 1 | 2 | 3 | 4) => {
     setToolOptions((current) => ({ ...current, brushSize: size }));
   }, []);
@@ -260,7 +312,8 @@ export function useEditorWorkspace() {
         activeLayerName: activeLayer.name,
         canUndo: history.canUndo,
         canRedo: history.canRedo,
-        canAddLayer: layerManager.layers.length < 3,
+        canAddLayer: layerManager.layers.length < LAYER_MAX_COUNT,
+        canRemoveLayer: layerManager.layers.length > LAYER_MIN_COUNT,
         gridMin: GRID_MIN,
         gridMax: GRID_MAX,
       },
@@ -285,6 +338,7 @@ export function useEditorWorkspace() {
         handleToggleVisibility,
         handleAddLayer,
         handleRotateLayer,
+        handleRemoveLayer,
         handleExportSvg,
         handleExportPng,
       },
@@ -317,6 +371,7 @@ export function useEditorWorkspace() {
       handleToggleVisibility,
       handleAddLayer,
       handleRotateLayer,
+      handleRemoveLayer,
       handleExportSvg,
       handleExportPng,
     ],
