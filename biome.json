@@ -14,5 +14,13 @@
       "quoteStyle": "double",
       "semicolons": "always"
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["src/samples/json/*.json"],
+      "formatter": {
+        "enabled": false
+      }
+    }
+  ]
 }

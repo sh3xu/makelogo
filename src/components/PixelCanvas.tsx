@@ -54,6 +54,7 @@ interface PixelCanvasProps {
   zoom: number;
   onZoomChange: (zoom: number) => void;
   theme: CanvasTheme;
+  viewResetKey: number;
 }
 
 export function PixelCanvas({
@@ -68,6 +69,7 @@ export function PixelCanvas({
   zoom,
   onZoomChange,
   theme,
+  viewResetKey,
 }: PixelCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -113,6 +115,12 @@ export function PixelCanvas({
       window.removeEventListener("keyup", onKeyUp);
     };
   }, []);
+
+  useEffect(() => {
+    panRef.current = { x: 0, y: 0 };
+    isPanningRef.current = false;
+    redrawRef.current();
+  }, [viewResetKey]);
 
   const n = grid.n;
   const baseCellSize = maxSize > 0 ? Math.max(2, Math.floor(maxSize / n)) : 0;

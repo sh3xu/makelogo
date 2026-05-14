@@ -84,6 +84,17 @@ export class Grid {
     return [...this._layers.get(layerId)!];
   }
 
+  importLayerCells(layerId: string, cells: readonly CellData[]): void {
+    const expected = this._n * this._n;
+    if (cells.length !== expected) {
+      throw new RangeError(
+        `importLayerCells: expected ${expected} cells for grid ${this._n}, got ${cells.length}`,
+      );
+    }
+    const copy: LayerCells = cells.map((c) => ({ filled: c.filled, color: c.color }));
+    this._layers.set(layerId, copy);
+  }
+
   private _emptyLayer(): LayerCells {
     return Array.from({ length: this._n * this._n }, () => ({
       filled: false,

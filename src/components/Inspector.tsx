@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import type { PngScale } from "../export/png";
 import { clampPngScale, MAX_PNG_SCALE, MIN_PNG_SCALE } from "../export/png";
 import type { Layer } from "../models/layers";
 import type { SymmetryMode, ToolOptions } from "../models/tools";
 import { Tool } from "../models/tools";
+import { parseProjectImportText } from "../samples/projectImport";
+import type { ProjectDocument } from "../samples/schema";
+import { ConfirmDialog } from "../shared/ui/ConfirmDialog";
 import type { SmoothingMode } from "../smoothing/slider";
 import { ColorPickerIcon, EyeIcon, EyeOffIcon, RotateLeftIcon, RotateRightIcon } from "./icons";
 import { SegmentedControl } from "./SegmentedControl";
@@ -30,6 +33,7 @@ export interface InspectorProps {
   onToggleVisibility: (id: string) => void;
   onAddLayer: () => void;
   onRotateLayer: (id: string, degrees: number) => void;
+  onRenameLayer: (id: string, name: string) => void;
 
   // Smoothing
   alpha: number;
@@ -42,6 +46,10 @@ export interface InspectorProps {
   onExportModeChange: (mode: ExportMode) => void;
   onExportSvg: () => void;
   onExportPng: (scale: PngScale) => void;
+  canvasHasContent: boolean;
+  theme: "dark" | "light";
+  onExportProject: () => void;
+  onApplyImportedProject: (doc: ProjectDocument) => void;
 }
 
 const PRESET_COLORS = [
@@ -75,6 +83,7 @@ export function Inspector({ ...props }: InspectorProps) {
         onToggleVisibility={props.onToggleVisibility}
         onAddLayer={props.onAddLayer}
         onRotateLayer={props.onRotateLayer}
+        onRenameLayer={props.onRenameLayer}
       />
       <SmoothingSection
         alpha={props.alpha}
@@ -87,6 +96,10 @@ export function Inspector({ ...props }: InspectorProps) {
         onExportModeChange={props.onExportModeChange}
         onExportSvg={props.onExportSvg}
         onExportPng={props.onExportPng}
+        canvasHasContent={props.canvasHasContent}
+        theme={props.theme}
+        onExportProject={props.onExportProject}
+        onApplyImportedProject={props.onApplyImportedProject}
       />
     </div>
   );
@@ -229,6 +242,7 @@ interface LayersSectionProps {
   onToggleVisibility: (id: string) => void;
   onAddLayer: () => void;
   onRotateLayer: (id: string, degrees: number) => void;
+  onRenameLayer: (id: string, name: string) => void;
 }
 
 export function LayersSection({
@@ -239,7 +253,42 @@ export function LayersSection({
   onToggleVisibility,
   onAddLayer,
   onRotateLayer,
+  onRenameLayer,
 }: LayersSectionProps) {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draftName, setDraftName] = useState("");
+  const renameInputRef = useRef<HTMLInputElement>(null);
+  const skipBlurCommitRef = useRef(false);
+
+  useEffect(() => {
+    if (editingId !== null) {
+      renameInputRef.current?.focus();
+      renameInputRef.current?.select();
+    }
+  }, [editingId]);
+
+  function beginRename(layer: Layer) {
+    setEditingId(layer.id);
+    setDraftName(layer.name);
+  }
+
+  function commitRename(layerId: string) {
+    onRenameLayer(layerId, draftName);
+    setEditingId(null);
+  }
+
+  function cancelRename() {
+    setEditingId(null);
+  }
+
+  function handleRenameBlur(layerId: string) {
+    if (skipBlurCommitRef.current) {
+      skipBlurCommitRef.current = false;
+      return;
+    }
+    commitRename(layerId);
+  }
+
   function normalizeRotation(degrees: number) {
     const normalized = degrees % 360;
     return normalized < 0 ? normalized + 360 : normalized;
@@ -251,14 +300,48 @@ export function LayersSection({
       {layers.map((layer) => (
         <div key={layer.id} className="inspector-layer">
           <div className={`layer-item${layer.id === activeLayerId ? " layer-item-active" : ""}`}>
-            <button
-              type="button"
-              className="layer-select-btn"
-              onClick={() => onSelectLayer(layer.id)}
-              aria-label={`Select ${layer.name}`}
-            >
-              <span className="layer-name">{layer.name}</span>
-            </button>
+            {editingId === layer.id ? (
+              <input
+                ref={renameInputRef}
+                type="text"
+                className="input layer-rename-input"
+                value={draftName}
+                aria-label="Layer name"
+                onChange={(event) => setDraftName(event.target.value)}
+                onBlur={() => handleRenameBlur(layer.id)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    commitRename(layer.id);
+                  }
+                  if (event.key === "Escape") {
+                    event.preventDefault();
+                    skipBlurCommitRef.current = true;
+                    cancelRename();
+                  }
+                }}
+                onClick={(event) => event.stopPropagation()}
+              />
+            ) : (
+              <button
+                type="button"
+                className="layer-select-btn"
+                onClick={() => onSelectLayer(layer.id)}
+                aria-label={`Select ${layer.name}`}
+              >
+                <span
+                  className="layer-name"
+                  title="Double-click to rename"
+                  onDoubleClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    beginRename(layer);
+                  }}
+                >
+                  {layer.name}
+                </span>
+              </button>
+            )}
             <span className="layer-item-end">
               <button
                 type="button"
@@ -364,6 +447,10 @@ interface ExportSectionProps {
   onExportModeChange: (mode: ExportMode) => void;
   onExportSvg: () => void;
   onExportPng: (scale: PngScale) => void;
+  canvasHasContent: boolean;
+  theme: "dark" | "light";
+  onExportProject: () => void;
+  onApplyImportedProject: (doc: ProjectDocument) => void;
 }
 
 export function ExportSection({
@@ -371,9 +458,17 @@ export function ExportSection({
   onExportModeChange,
   onExportSvg,
   onExportPng,
+  canvasHasContent,
+  theme,
+  onExportProject,
+  onApplyImportedProject,
 }: ExportSectionProps) {
   const [exportFormat, setExportFormat] = useState<"svg" | "png">("svg");
   const [pngQuality, setPngQuality] = useState<PngScale>(8);
+  const [importMessage, setImportMessage] = useState<string | null>(null);
+  const [importConfirmOpen, setImportConfirmOpen] = useState(false);
+  const [pendingDoc, setPendingDoc] = useState<ProjectDocument | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleExport() {
     if (exportFormat === "svg") {
@@ -381,6 +476,40 @@ export function ExportSection({
       return;
     }
     onExportPng(clampPngScale(pngQuality));
+  }
+
+  async function handleImportFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    setImportMessage(null);
+    if (!file) {
+      return;
+    }
+    const text = await file.text();
+    const result = parseProjectImportText(text);
+    if (!result.ok) {
+      setImportMessage(result.error);
+      return;
+    }
+    if (canvasHasContent) {
+      setPendingDoc(result.doc);
+      setImportConfirmOpen(true);
+    } else {
+      onApplyImportedProject(result.doc);
+    }
+  }
+
+  function handleConfirmImportReplace() {
+    if (pendingDoc) {
+      onApplyImportedProject(pendingDoc);
+    }
+    setImportConfirmOpen(false);
+    setPendingDoc(null);
+  }
+
+  function handleCancelImportReplace() {
+    setImportConfirmOpen(false);
+    setPendingDoc(null);
   }
 
   return (
@@ -432,6 +561,47 @@ export function ExportSection({
           Export {exportFormat.toUpperCase()}
         </button>
       </div>
+
+      <span className="inspector-label inspector-label-spaced">Project</span>
+      <p className="inspector-project-hint">
+        Save or load a <code className="inspector-code">.json</code> project file. Each layer uses a{" "}
+        <code className="inspector-code">cells</code> array in row-major order:{" "}
+        <code className="inspector-code">null</code> for empty, or a hex color string when filled
+        (same shape as bundled samples).
+      </p>
+      <div className="inspector-row inspector-row-wrap">
+        <button type="button" className="btn btn-sm" onClick={onExportProject}>
+          Export JSON
+        </button>
+        <button
+          type="button"
+          className="btn btn-sm"
+          onClick={() => fileInputRef.current?.click()}
+          title="Import a Glyph project JSON file"
+        >
+          Import JSON
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="inspector-file-input-hidden"
+          accept=".json,application/json"
+          aria-label="Import project JSON file"
+          onChange={handleImportFileChange}
+        />
+      </div>
+      {importMessage ? <div className="inspector-import-error">{importMessage}</div> : null}
+
+      <ConfirmDialog
+        open={importConfirmOpen}
+        theme={theme}
+        title="Replace canvas?"
+        message="Importing this project will replace your current artwork and clear undo history for this session."
+        confirmLabel="Import project"
+        cancelLabel="Cancel"
+        onConfirm={handleConfirmImportReplace}
+        onCancel={handleCancelImportReplace}
+      />
     </div>
   );
 }

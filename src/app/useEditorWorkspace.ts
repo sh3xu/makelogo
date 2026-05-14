@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DrawStrokeCommand, History, ResizeCommand } from "../canvas/history";
 import { resizeGrid } from "../canvas/resize";
-import { downloadPng, downloadSvg, generateFilename } from "../export/download";
+import {
+  downloadPng,
+  downloadProjectJson,
+  downloadSvg,
+  generateFilename,
+} from "../export/download";
 import type { ExportConfig } from "../export/integration";
 import { exportPng, exportSvg } from "../export/integration";
 import type { PngScale } from "../export/png";
@@ -10,6 +15,12 @@ import { clampGridSize, GRID_MAX, GRID_MIN, Grid } from "../models/grid";
 import { LayerManager } from "../models/layers";
 import type { SymmetryMode, ToolOptions } from "../models/tools";
 import { DEFAULT_TOOL_OPTIONS, Tool } from "../models/tools";
+import { applyProjectDocument } from "../samples/applyProjectDocument";
+import { isCanvasNonEmpty } from "../samples/isCanvasNonEmpty";
+import { parseProjectImportText } from "../samples/projectImport";
+import { serializeProjectDocument } from "../samples/projectSerialize";
+import { getBundledSampleProjectJson, SAMPLE_REGISTRY } from "../samples/registry";
+import type { ProjectDocument } from "../samples/schema";
 import type { SmoothedLayerResult, SmoothingMode } from "../smoothing/slider";
 import { computeSmoothedPaths } from "../smoothing/slider";
 
@@ -34,6 +45,17 @@ export function useEditorWorkspace() {
   const [cursorPos, setCursorPos] = useState<{ row: number; col: number } | null>(null);
 
   const bump = useCallback(() => setVersion((current) => current + 1), []);
+
+  const sampleSummaries = useMemo(
+    () =>
+      SAMPLE_REGISTRY.map(({ id, title, shortDescription, learningNote }) => ({
+        id,
+        title,
+        shortDescription,
+        learningNote,
+      })),
+    [],
+  );
 
   useEffect(() => {
     const grid = gridRef.current;
@@ -194,6 +216,20 @@ export function useEditorWorkspace() {
     [bump],
   );
 
+  const handleRenameLayer = useCallback(
+    (id: string, name: string) => {
+      layerManagerRef.current.setLayerName(id, name);
+      bump();
+    },
+    [bump],
+  );
+
+  const [canvasViewResetKey, setCanvasViewResetKey] = useState(0);
+  const handleResetCanvasView = useCallback(() => {
+    setZoom(1);
+    setCanvasViewResetKey((key) => key + 1);
+  }, []);
+
   const handleBrushSizeChange = useCallback((size: 1 | 2 | 3 | 4) => {
     setToolOptions((current) => ({ ...current, brushSize: size }));
   }, []);
@@ -234,9 +270,45 @@ export function useEditorWorkspace() {
     [buildExportConfig, exportMode],
   );
 
+  const applyLoadedProjectDocument = useCallback(
+    (doc: ProjectDocument) => {
+      const { grid, layerManager } = applyProjectDocument(doc);
+      gridRef.current = grid;
+      layerManagerRef.current = layerManager;
+      historyRef.current.clear();
+      setGridSizeInput(String(grid.n));
+      setZoom(1);
+      setCanvasViewResetKey((key) => key + 1);
+      bump();
+    },
+    [bump],
+  );
+
+  const handleLoadSampleById = useCallback(
+    (sampleId: string) => {
+      const text = getBundledSampleProjectJson(sampleId);
+      if (text === undefined) {
+        return;
+      }
+      const result = parseProjectImportText(text);
+      if (!result.ok) {
+        return;
+      }
+      applyLoadedProjectDocument(result.doc);
+    },
+    [applyLoadedProjectDocument],
+  );
+
+  const handleExportProject = useCallback(() => {
+    const doc = serializeProjectDocument(gridRef.current, layerManagerRef.current);
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    downloadProjectJson(doc, `glyph-project-${stamp}.json`);
+  }, []);
+
   const layerManager = layerManagerRef.current;
   const history = historyRef.current;
   const activeLayer = layerManager.getActiveLayer();
+  const canvasHasContent = isCanvasNonEmpty(gridRef.current, layerManagerRef.current);
 
   return useMemo(
     () => ({
@@ -263,6 +335,9 @@ export function useEditorWorkspace() {
         canAddLayer: layerManager.layers.length < 3,
         gridMin: GRID_MIN,
         gridMax: GRID_MAX,
+        sampleSummaries,
+        canvasHasContent,
+        canvasViewResetKey,
       },
       actions: {
         setTheme,
@@ -285,8 +360,13 @@ export function useEditorWorkspace() {
         handleToggleVisibility,
         handleAddLayer,
         handleRotateLayer,
+        handleRenameLayer,
         handleExportSvg,
         handleExportPng,
+        handleExportProject,
+        applyImportedProject: applyLoadedProjectDocument,
+        handleLoadSampleById,
+        handleResetCanvasView,
       },
     }),
     [
@@ -317,8 +397,16 @@ export function useEditorWorkspace() {
       handleToggleVisibility,
       handleAddLayer,
       handleRotateLayer,
+      handleRenameLayer,
       handleExportSvg,
       handleExportPng,
+      handleExportProject,
+      applyLoadedProjectDocument,
+      sampleSummaries,
+      canvasHasContent,
+      canvasViewResetKey,
+      handleLoadSampleById,
+      handleResetCanvasView,
     ],
   );
 }

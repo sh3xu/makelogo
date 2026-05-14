@@ -23,6 +23,9 @@ export function AppShell() {
         onGridSizeSubmit={actions.handleGridSizeSubmit}
         onUndo={actions.handleUndo}
         onRedo={actions.handleRedo}
+        sampleSummaries={state.sampleSummaries}
+        canvasHasContent={state.canvasHasContent}
+        onApplySample={actions.handleLoadSampleById}
       />
       <main className="workspace-grid">
         <aside className="workspace-tools">
@@ -41,6 +44,8 @@ export function AppShell() {
             onZoomChange={actions.setZoom}
             onCursorChange={actions.setCursorPos}
             onStrokeComplete={actions.handleStrokeComplete}
+            canvasViewResetKey={state.canvasViewResetKey}
+            onResetCanvasView={actions.handleResetCanvasView}
           />
         </div>
         <aside className="workspace-side">
@@ -63,11 +68,16 @@ export function AppShell() {
             onToggleVisibility={actions.handleToggleVisibility}
             onAddLayer={actions.handleAddLayer}
             onRotateLayer={actions.handleRotateLayer}
+            onRenameLayer={actions.handleRenameLayer}
             onAlphaChange={actions.setAlpha}
             onSmoothingModeChange={actions.setSmoothingMode}
             onExportModeChange={actions.setExportMode}
             onExportSvg={actions.handleExportSvg}
             onExportPng={actions.handleExportPng}
+            canvasHasContent={state.canvasHasContent}
+            theme={state.theme}
+            onExportProject={actions.handleExportProject}
+            onApplyImportedProject={actions.applyImportedProject}
           />
         </aside>
       </main>

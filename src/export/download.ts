@@ -1,3 +1,4 @@
+import type { ProjectDocument } from "../samples/schema";
 import type { PngScale } from "./png";
 
 /**
@@ -14,6 +15,18 @@ export function downloadSvg(svgString: string, filename: string = "logo.svg"): v
 export function downloadPng(blob: Blob, scale: PngScale, baseName: string = "logo"): void {
   const filename = `${baseName}-${scale}x.png`;
   triggerDownload(blob, filename);
+}
+
+/**
+ * Download a Glyph project document (JSON) for later import.
+ */
+export function downloadProjectJson(
+  doc: ProjectDocument,
+  filename: string = "glyph-project.json",
+): void {
+  const json = `${JSON.stringify(doc, null, 2)}\n`;
+  const blob = new Blob([json], { type: "application/json;charset=utf-8" });
+  triggerDownload(blob, filename.endsWith(".json") ? filename : `${filename}.json`);
 }
 
 /**

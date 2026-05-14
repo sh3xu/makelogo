@@ -1,5 +1,6 @@
 export const LAYER_MIN_COUNT = 2;
 export const LAYER_MAX_COUNT = 3;
+export const LAYER_NAME_MAX_LENGTH = 64;
 
 export interface Layer {
   id: string;
@@ -117,6 +118,15 @@ export class LayerManager {
   setRotation(id: string, degrees: number): void {
     const layer = this._requireLayer(id);
     layer.rotation = degrees;
+  }
+
+  setLayerName(id: string, name: string): void {
+    const layer = this._requireLayer(id);
+    const trimmed = name.trim();
+    if (trimmed.length === 0) {
+      return;
+    }
+    layer.name = trimmed.slice(0, LAYER_NAME_MAX_LENGTH);
   }
 
   getVisibleLayers(): readonly Layer[] {

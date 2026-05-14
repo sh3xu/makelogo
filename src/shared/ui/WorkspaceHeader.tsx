@@ -1,4 +1,6 @@
 import { MoonIcon, RedoIcon, SunIcon, UndoIcon } from "../../components/icons";
+import type { SampleSummary } from "./WorkspaceSamples";
+import { WorkspaceSamples } from "./WorkspaceSamples";
 
 interface WorkspaceHeaderProps {
   theme: "dark" | "light";
@@ -12,6 +14,9 @@ interface WorkspaceHeaderProps {
   onGridSizeSubmit: () => void;
   onUndo: () => void;
   onRedo: () => void;
+  sampleSummaries: readonly SampleSummary[];
+  canvasHasContent: boolean;
+  onApplySample: (id: string) => void;
 }
 
 export function WorkspaceHeader({
@@ -26,6 +31,9 @@ export function WorkspaceHeader({
   onGridSizeSubmit,
   onUndo,
   onRedo,
+  sampleSummaries,
+  canvasHasContent,
+  onApplySample,
 }: WorkspaceHeaderProps) {
   return (
     <header className="workspace-header">
@@ -34,6 +42,12 @@ export function WorkspaceHeader({
         <p>Vector-first logo design workspace</p>
       </div>
       <div className="workspace-actions">
+        <WorkspaceSamples
+          entries={sampleSummaries}
+          canvasHasContent={canvasHasContent}
+          theme={theme}
+          onApplySample={onApplySample}
+        />
         <button className="btn btn-icon" type="button" onClick={onThemeToggle} title="Toggle theme">
           {theme === "dark" ? <SunIcon /> : <MoonIcon />}
         </button>
