@@ -35,9 +35,6 @@ function exportAsIsSvg(config: ExportConfig): string {
   const { width, height } = config;
 
   if (config.mode === "no-bg") {
-    if (config.background.type !== "transparent") {
-      return generatePixelSvgWithBackground(grid, layerManager, width, height, config.background);
-    }
     return generatePixelSvg(grid, layerManager, width, height);
   }
 

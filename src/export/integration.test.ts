@@ -68,6 +68,29 @@ describe("exportSvg integration (T-021)", () => {
     expect(svg).toContain("</svg>");
   });
 
+  it("no-bg with none styling ignores solid background config", () => {
+    const grid = new Grid(8);
+    const layerManager = new LayerManager([
+      { id: "l1", name: "Layer 1", visible: true, rotation: 0 },
+    ]);
+    grid.initLayer("l1");
+    grid.fillCell("l1", 0, 0, "#ff0000");
+
+    const svg = exportSvg({
+      ...BASE_CONFIG,
+      width: 10,
+      height: 10,
+      smoothingMode: "none",
+      mode: "no-bg",
+      background: { type: "solid", color: "#cccccc" },
+      grid,
+      layerManager,
+    });
+
+    expect(svg).not.toContain('fill="#cccccc"');
+    expect(svg).toContain('fill="#ff0000"');
+  });
+
   it("none styling export uses pixel rects from the grid", () => {
     const grid = new Grid(8);
     const layerManager = new LayerManager([
