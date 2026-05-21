@@ -5,7 +5,7 @@ import { usesRawGridStyling } from "../smoothing/slider";
 import type { BackgroundOption } from "./background";
 import { generateSvgWithBackground } from "./background";
 import { type PngScale, rasterizeSvgToPng } from "./png";
-import { generatePixelModeSvg, generatePixelSvg } from "./pixelSvg";
+import { generatePixelModeSvg, generatePixelSvg, generatePixelSvgWithBackground } from "./pixelSvg";
 import { generateModeSvg, generateSvg } from "./svg";
 
 export interface ExportConfig {
@@ -35,10 +35,18 @@ function exportAsIsSvg(config: ExportConfig): string {
   const { width, height } = config;
 
   if (config.mode === "no-bg") {
+    if (config.background.type !== "transparent") {
+      return generatePixelSvgWithBackground(grid, layerManager, width, height, config.background);
+    }
     return generatePixelSvg(grid, layerManager, width, height);
   }
 
   const bg = config.mode === "light" ? config.lightBg : config.darkBg;
+
+  if (config.background.type !== "transparent") {
+    return generatePixelSvgWithBackground(grid, layerManager, width, height, config.background);
+  }
+
   return generatePixelModeSvg(grid, layerManager, width, height, bg);
 }
 

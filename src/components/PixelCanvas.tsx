@@ -399,13 +399,13 @@ export function PixelCanvas({
             ? "erase"
             : "paint";
 
+    const initialChanges = applyCells([cell], mode);
     strokeRef.current = {
       mode,
       layerId,
-      changes: [],
+      changes: initialChanges,
       lastCell: cell,
     };
-    extendFreehandStroke(cell);
 
     redrawRef.current();
   }

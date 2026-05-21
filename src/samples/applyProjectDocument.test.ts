@@ -19,12 +19,11 @@ describe("parseProjectDocument", () => {
   });
 
   it("rejects wrong layer count", () => {
-    const cells = emptyLayerCellsJson(8);
     expect(() =>
       parseProjectDocument({
         formatVersion: 1,
         gridSize: 8,
-        layers: [{ id: "a", name: "A", visible: true, rotation: 0, cells }],
+        layers: [],
       }),
     ).toThrow(/layers length/);
   });

@@ -347,7 +347,10 @@ export function useEditorWorkspace() {
   const layerManager = layerManagerRef.current;
   const history = historyRef.current;
   const activeLayer = layerManager.getActiveLayer();
-  const canvasHasContent = isCanvasNonEmpty(gridRef.current, layerManagerRef.current);
+  const canvasHasContent = useMemo(
+    () => isCanvasNonEmpty(gridRef.current, layerManagerRef.current),
+    [version],
+  );
 
   return useMemo(
     () => ({
