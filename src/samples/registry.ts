@@ -1,6 +1,5 @@
 import layeredGemRaw from "./json/layered-gem.json?raw";
 import robotBuddyRaw from "./json/robot-buddy.json?raw";
-import shieldBadgeRaw from "./json/shield-badge.json?raw";
 import sunburstMarkRaw from "./json/sunburst-mark.json?raw";
 
 const SAMPLE_META = [
@@ -28,14 +27,6 @@ const SAMPLE_META = [
     learningNote:
       "Sky lives on one layer and the subject on another so you can repaint feathers without redoing the moon.",
   },
-  {
-    id: "shield-badge",
-    title: "Heraldic lion",
-    shortDescription:
-      "Azure heater shield, pale division, and a gold lion charge on a rotated layer (64 grid).",
-    learningNote:
-      "The lion layer is rotated slightly so you can compare straight shield geometry against a turned charge.",
-  },
 ] as const;
 
 type SampleId = (typeof SAMPLE_META)[number]["id"];
@@ -51,7 +42,6 @@ const BUNDLED_SAMPLE_PROJECT_JSON: Record<SampleId, string> = {
   "layered-gem": layeredGemRaw,
   "sunburst-mark": sunburstMarkRaw,
   "robot-buddy": robotBuddyRaw,
-  "shield-badge": shieldBadgeRaw,
 };
 
 export const SAMPLE_REGISTRY: readonly SampleListEntry[] = SAMPLE_META.map((meta) => ({
