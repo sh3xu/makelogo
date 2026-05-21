@@ -52,6 +52,19 @@ export class Grid {
     this._layers.delete(layerId);
   }
 
+  restoreLayerCells(layerId: string, cells: LayerCells): void {
+    const expected = this._n * this._n;
+    if (cells.length !== expected) {
+      throw new RangeError(
+        `restoreLayerCells: expected ${expected} cells for grid n=${this._n}, got ${cells.length}`,
+      );
+    }
+    this._layers.set(
+      layerId,
+      cells.map((c) => ({ ...c })),
+    );
+  }
+
   getCell(layerId: string, row: number, col: number): CellData {
     this._assertInBounds(row, col);
     const cells = this._layers.get(layerId);

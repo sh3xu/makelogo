@@ -1,4 +1,5 @@
 import type { CellData, Grid } from "../models/grid";
+import type { Layer, LayerManager } from "../models/layers";
 
 export interface Command {
   execute(): void;
@@ -36,6 +37,36 @@ export class DrawStrokeCommand implements Command {
 export interface GridSnapshot {
   n: number;
   layers: Map<string, CellData[]>;
+}
+
+export interface RemoveLayerSnapshot {
+  layer: Layer;
+  insertIndex: number;
+  cells: CellData[];
+  activeLayerIdBefore: string;
+}
+
+export class RemoveLayerCommand implements Command {
+  private _grid: Grid;
+  private _layerManager: LayerManager;
+  private _snapshot: RemoveLayerSnapshot;
+
+  constructor(grid: Grid, layerManager: LayerManager, snapshot: RemoveLayerSnapshot) {
+    this._grid = grid;
+    this._layerManager = layerManager;
+    this._snapshot = snapshot;
+  }
+
+  execute(): void {
+    this._layerManager.removeLayer(this._snapshot.layer.id);
+    this._grid.removeLayer(this._snapshot.layer.id);
+  }
+
+  undo(): void {
+    this._layerManager.insertLayerAt(this._snapshot.layer, this._snapshot.insertIndex);
+    this._grid.restoreLayerCells(this._snapshot.layer.id, this._snapshot.cells);
+    this._layerManager.setActiveLayer(this._snapshot.activeLayerIdBefore);
+  }
 }
 
 export class ResizeCommand implements Command {

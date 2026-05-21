@@ -8,7 +8,7 @@ import { parseProjectImportText } from "../samples/projectImport";
 import type { ProjectDocument } from "../samples/schema";
 import { ConfirmDialog } from "../shared/ui/ConfirmDialog";
 import type { SmoothingMode } from "../smoothing/slider";
-import { ColorPickerIcon, EyeIcon, EyeOffIcon, RotateLeftIcon, RotateRightIcon } from "./icons";
+import { ColorPickerIcon, EyeIcon, EyeOffIcon, RotateLeftIcon, RotateRightIcon, TrashIcon } from "./icons";
 import { SegmentedControl } from "./SegmentedControl";
 
 type ExportMode = "light" | "dark" | "no-bg";
@@ -29,11 +29,13 @@ export interface InspectorProps {
   layers: readonly Layer[];
   activeLayerId: string;
   canAddLayer: boolean;
+  canRemoveLayer: boolean;
   onSelectLayer: (id: string) => void;
   onToggleVisibility: (id: string) => void;
   onAddLayer: () => void;
   onRotateLayer: (id: string, degrees: number) => void;
   onRenameLayer: (id: string, name: string) => void;
+  onRemoveLayer: (id: string) => void;
 
   // Smoothing
   alpha: number;
@@ -79,11 +81,13 @@ export function Inspector({ ...props }: InspectorProps) {
         layers={props.layers}
         activeLayerId={props.activeLayerId}
         canAddLayer={props.canAddLayer}
+        canRemoveLayer={props.canRemoveLayer}
         onSelectLayer={props.onSelectLayer}
         onToggleVisibility={props.onToggleVisibility}
         onAddLayer={props.onAddLayer}
         onRotateLayer={props.onRotateLayer}
         onRenameLayer={props.onRenameLayer}
+        onRemoveLayer={props.onRemoveLayer}
       />
       <SmoothingSection
         alpha={props.alpha}
@@ -238,22 +242,26 @@ interface LayersSectionProps {
   layers: readonly Layer[];
   activeLayerId: string;
   canAddLayer: boolean;
+  canRemoveLayer: boolean;
   onSelectLayer: (id: string) => void;
   onToggleVisibility: (id: string) => void;
   onAddLayer: () => void;
   onRotateLayer: (id: string, degrees: number) => void;
   onRenameLayer: (id: string, name: string) => void;
+  onRemoveLayer: (id: string) => void;
 }
 
 export function LayersSection({
   layers,
   activeLayerId,
   canAddLayer,
+  canRemoveLayer,
   onSelectLayer,
   onToggleVisibility,
   onAddLayer,
   onRotateLayer,
   onRenameLayer,
+  onRemoveLayer,
 }: LayersSectionProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftName, setDraftName] = useState("");
@@ -355,6 +363,19 @@ export function LayersSection({
                 title={layer.visible ? "Hide layer" : "Show layer"}
               >
                 {layer.visible ? <EyeIcon aria-hidden="true" /> : <EyeOffIcon aria-hidden="true" />}
+              </button>
+              <button
+                type="button"
+                className="layer-trash-btn"
+                disabled={!canRemoveLayer}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemoveLayer(layer.id);
+                }}
+                aria-label={`Delete ${layer.name}`}
+                title={canRemoveLayer ? "Delete layer" : "Cannot delete: minimum layers reached"}
+              >
+                <TrashIcon aria-hidden="true" />
               </button>
             </span>
           </div>

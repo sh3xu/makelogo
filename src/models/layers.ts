@@ -1,5 +1,5 @@
-export const LAYER_MIN_COUNT = 2;
-export const LAYER_MAX_COUNT = 3;
+export const LAYER_MIN_COUNT = 1;
+export const LAYER_MAX_COUNT = 4;
 export const LAYER_NAME_MAX_LENGTH = 64;
 
 export interface Layer {
@@ -95,6 +95,16 @@ export class LayerManager {
     if (this._activeLayerId === id) {
       this._activeLayerId = this._layers[this._layers.length - 1]!.id;
     }
+  }
+
+  insertLayerAt(layer: Layer, index: number): void {
+    if (this._layers.length >= LAYER_MAX_COUNT) {
+      throw new Error(`Cannot insert layer: maximum of ${LAYER_MAX_COUNT} layers reached`);
+    }
+    if (index < 0 || index > this._layers.length) {
+      throw new RangeError(`insertLayerAt: index ${index} out of range for length ${this._layers.length}`);
+    }
+    this._layers.splice(index, 0, { ...layer });
   }
 
   moveLayerUp(id: string): void {
