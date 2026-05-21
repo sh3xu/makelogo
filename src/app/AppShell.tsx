@@ -13,14 +13,11 @@ export function AppShell() {
     <div className="app-shell" data-theme={state.theme}>
       <WorkspaceHeader
         theme={state.theme}
-        gridSizeInput={state.gridSizeInput}
-        gridMin={state.gridMin}
-        gridMax={state.gridMax}
+        gridSize={state.gridSize}
         canUndo={state.canUndo}
         canRedo={state.canRedo}
         onThemeToggle={() => actions.setTheme(state.theme === "dark" ? "light" : "dark")}
-        onGridSizeInputChange={actions.setGridSizeInput}
-        onGridSizeSubmit={actions.handleGridSizeSubmit}
+        onGridSizeChange={actions.handleGridSizeChange}
         onUndo={actions.handleUndo}
         onRedo={actions.handleRedo}
         sampleSummaries={state.sampleSummaries}

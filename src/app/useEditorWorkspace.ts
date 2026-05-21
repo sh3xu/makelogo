@@ -11,7 +11,7 @@ import type { ExportConfig } from "../export/integration";
 import { exportPng, exportSvg } from "../export/integration";
 import type { PngScale } from "../export/png";
 import type { CellData } from "../models/grid";
-import { clampGridSize, GRID_MAX, GRID_MIN, Grid } from "../models/grid";
+import { clampGridSize, Grid } from "../models/grid";
 import { LAYER_MAX_COUNT, LAYER_MIN_COUNT, LayerManager } from "../models/layers";
 import type { SymmetryMode, ToolOptions } from "../models/tools";
 import { DEFAULT_TOOL_OPTIONS, Tool } from "../models/tools";
@@ -37,7 +37,6 @@ export function useEditorWorkspace() {
   const [smoothingMode, setSmoothingMode] = useState<SmoothingMode>("smooth");
   const [smoothedResult, setSmoothedResult] = useState<SmoothedLayerResult[]>([]);
   const [exportMode, setExportMode] = useState<ExportMode>("no-bg");
-  const [gridSizeInput, setGridSizeInput] = useState("16");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [activeTool, setActiveTool] = useState<Tool>(Tool.Draw);
   const [toolOptions, setToolOptions] = useState<ToolOptions>(DEFAULT_TOOL_OPTIONS);
@@ -80,6 +79,7 @@ export function useEditorWorkspace() {
       return (
         target instanceof HTMLInputElement ||
         target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement ||
         (target instanceof HTMLElement && target.isContentEditable)
       );
     }
@@ -99,7 +99,6 @@ export function useEditorWorkspace() {
         if (isUndo) {
           event.preventDefault();
           historyRef.current.undo();
-          setGridSizeInput(String(gridRef.current.n));
           setVersion((current) => current + 1);
           return;
         }
@@ -107,7 +106,6 @@ export function useEditorWorkspace() {
         if (isRedo) {
           event.preventDefault();
           historyRef.current.redo();
-          setGridSizeInput(String(gridRef.current.n));
           setVersion((current) => current + 1);
           return;
         }
@@ -161,13 +159,11 @@ export function useEditorWorkspace() {
 
   const handleUndo = useCallback(() => {
     historyRef.current.undo();
-    setGridSizeInput(String(gridRef.current.n));
     bump();
   }, [bump]);
 
   const handleRedo = useCallback(() => {
     historyRef.current.redo();
-    setGridSizeInput(String(gridRef.current.n));
     bump();
   }, [bump]);
 
@@ -190,20 +186,10 @@ export function useEditorWorkspace() {
           newGrid,
         ),
       );
-      setGridSizeInput(String(clamped));
       bump();
     },
     [bump],
   );
-
-  const handleGridSizeSubmit = useCallback(() => {
-    const value = Number.parseInt(gridSizeInput, 10);
-    if (Number.isNaN(value)) {
-      setGridSizeInput(String(gridRef.current.n));
-      return;
-    }
-    handleResize(value);
-  }, [gridSizeInput, handleResize]);
 
   const handleSelectLayer = useCallback(
     (id: string) => {
@@ -276,7 +262,6 @@ export function useEditorWorkspace() {
           activeLayerIdBefore,
         }),
       );
-      setGridSizeInput(String(grid.n));
       bump();
     },
     [bump],
@@ -328,7 +313,6 @@ export function useEditorWorkspace() {
       gridRef.current = grid;
       layerManagerRef.current = layerManager;
       historyRef.current.clear();
-      setGridSizeInput(String(grid.n));
       setZoom(1);
       setCanvasViewResetKey((key) => key + 1);
       bump();
@@ -373,7 +357,7 @@ export function useEditorWorkspace() {
         smoothingMode,
         smoothedResult,
         exportMode,
-        gridSizeInput,
+        gridSize: gridRef.current.n,
         theme,
         activeTool,
         toolOptions,
@@ -386,15 +370,12 @@ export function useEditorWorkspace() {
         canRedo: history.canRedo,
         canAddLayer: layerManager.layers.length < LAYER_MAX_COUNT,
         canRemoveLayer: layerManager.layers.length > LAYER_MIN_COUNT,
-        gridMin: GRID_MIN,
-        gridMax: GRID_MAX,
         sampleSummaries,
         canvasHasContent,
         canvasViewResetKey,
       },
       actions: {
         setTheme,
-        setGridSizeInput,
         setActiveTool,
         setZoom,
         setCursorPos,
@@ -404,7 +385,7 @@ export function useEditorWorkspace() {
         setExportMode,
         handleUndo,
         handleRedo,
-        handleGridSizeSubmit,
+        handleGridSizeChange: handleResize,
         handleStrokeComplete,
         handleBrushSizeChange,
         handleSymmetryChange,
@@ -431,7 +412,6 @@ export function useEditorWorkspace() {
       smoothingMode,
       smoothedResult,
       exportMode,
-      gridSizeInput,
       theme,
       activeTool,
       toolOptions,
@@ -442,7 +422,7 @@ export function useEditorWorkspace() {
       history.canRedo,
       handleUndo,
       handleRedo,
-      handleGridSizeSubmit,
+      handleResize,
       handleStrokeComplete,
       handleBrushSizeChange,
       handleSymmetryChange,

@@ -1,17 +1,15 @@
 import { MoonIcon, RedoIcon, SunIcon, UndoIcon } from "../../components/icons";
+import { gridSizeSelectOptions } from "../../models/grid";
 import type { SampleSummary } from "./WorkspaceSamples";
 import { WorkspaceSamples } from "./WorkspaceSamples";
 
 interface WorkspaceHeaderProps {
   theme: "dark" | "light";
-  gridSizeInput: string;
-  gridMin: number;
-  gridMax: number;
+  gridSize: number;
   canUndo: boolean;
   canRedo: boolean;
   onThemeToggle: () => void;
-  onGridSizeInputChange: (value: string) => void;
-  onGridSizeSubmit: () => void;
+  onGridSizeChange: (size: number) => void;
   onUndo: () => void;
   onRedo: () => void;
   sampleSummaries: readonly SampleSummary[];
@@ -21,20 +19,18 @@ interface WorkspaceHeaderProps {
 
 export function WorkspaceHeader({
   theme,
-  gridSizeInput,
-  gridMin,
-  gridMax,
+  gridSize,
   canUndo,
   canRedo,
   onThemeToggle,
-  onGridSizeInputChange,
-  onGridSizeSubmit,
+  onGridSizeChange,
   onUndo,
   onRedo,
   sampleSummaries,
   canvasHasContent,
   onApplySample,
 }: WorkspaceHeaderProps) {
+  const gridSizeOptions = gridSizeSelectOptions(gridSize);
   return (
     <header className="workspace-header">
       <div className="workspace-brand">
@@ -53,14 +49,18 @@ export function WorkspaceHeader({
         </button>
         <label className="field">
           Grid
-          <input
-            className="input input-sm"
-            value={gridSizeInput}
-            onChange={(event) => onGridSizeInputChange(event.target.value)}
-            onBlur={onGridSizeSubmit}
-            onKeyDown={(event) => event.key === "Enter" && onGridSizeSubmit()}
-            aria-label={`Grid size (${gridMin}-${gridMax})`}
-          />
+          <select
+            className="input input-select"
+            value={String(gridSize)}
+            onChange={(event) => onGridSizeChange(Number(event.target.value))}
+            aria-label="Grid size"
+          >
+            {gridSizeOptions.map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </select>
         </label>
         <button
           className="btn btn-icon"

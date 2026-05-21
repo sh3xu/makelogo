@@ -757,6 +757,12 @@ h3 {
   text-align: center;
 }
 
+.input-select {
+  min-width: 56px;
+  padding-right: var(--sp-3);
+  cursor: pointer;
+}
+
 .input-xs {
   height: 20px;
   width: 42px;
