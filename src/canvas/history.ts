@@ -119,4 +119,9 @@ export class History {
   get canRedo(): boolean {
     return this._redoStack.length > 0;
   }
+
+  clear(): void {
+    this._undoStack = [];
+    this._redoStack = [];
+  }
 }

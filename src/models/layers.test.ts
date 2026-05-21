@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { LAYER_MAX_COUNT, LAYER_MIN_COUNT, LayerManager } from "./layers";
+import { LAYER_MAX_COUNT, LAYER_MIN_COUNT, LAYER_NAME_MAX_LENGTH, LayerManager } from "./layers";
 
 describe("LayerManager", () => {
   let manager: LayerManager;
@@ -80,6 +80,26 @@ describe("LayerManager", () => {
     expect(manager.getLayer(id)!.visible).toBe(false);
     manager.setVisibility(id, true);
     expect(manager.getLayer(id)!.visible).toBe(true);
+  });
+
+  it("setLayerName trims and applies", () => {
+    const id = manager.layers[0]!.id;
+    manager.setLayerName(id, "  Outline  ");
+    expect(manager.getLayer(id)!.name).toBe("Outline");
+  });
+
+  it("setLayerName ignores whitespace-only input", () => {
+    const id = manager.layers[0]!.id;
+    const before = manager.getLayer(id)!.name;
+    manager.setLayerName(id, "   \t  ");
+    expect(manager.getLayer(id)!.name).toBe(before);
+  });
+
+  it("setLayerName truncates to max length", () => {
+    const id = manager.layers[0]!.id;
+    const long = "a".repeat(LAYER_NAME_MAX_LENGTH + 10);
+    manager.setLayerName(id, long);
+    expect(manager.getLayer(id)!.name.length).toBe(LAYER_NAME_MAX_LENGTH);
   });
 
   it("getVisibleLayers returns only visible layers", () => {

@@ -1,6 +1,17 @@
 export const GRID_MIN = 8;
 export const GRID_MAX = 128;
 
+/** NOTE: Preset sizes offered in the workspace grid dropdown. */
+export const GRID_SIZE_OPTIONS = [8, 16, 32, 64, 128] as const;
+
+export function gridSizeSelectOptions(current: number): readonly number[] {
+  const n = clampGridSize(current);
+  if ((GRID_SIZE_OPTIONS as readonly number[]).includes(n)) {
+    return GRID_SIZE_OPTIONS;
+  }
+  return [...GRID_SIZE_OPTIONS, n].sort((a, b) => a - b);
+}
+
 export function clampGridSize(n: number): number {
   return Math.max(GRID_MIN, Math.min(GRID_MAX, Math.round(n)));
 }
@@ -95,6 +106,17 @@ export class Grid {
       this.initLayer(layerId);
     }
     return [...this._layers.get(layerId)!];
+  }
+
+  importLayerCells(layerId: string, cells: readonly CellData[]): void {
+    const expected = this._n * this._n;
+    if (cells.length !== expected) {
+      throw new RangeError(
+        `importLayerCells: expected ${expected} cells for grid ${this._n}, got ${cells.length}`,
+      );
+    }
+    const copy: LayerCells = cells.map((c) => ({ filled: c.filled, color: c.color }));
+    this._layers.set(layerId, copy);
   }
 
   private _emptyLayer(): LayerCells {

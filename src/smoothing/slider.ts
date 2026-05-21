@@ -1,12 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Grid } from "../models/grid";
 import type { LayerManager } from "../models/layers";
-import {
-  type SmoothedPath,
-  smoothContour,
-  smoothContourHandbrush,
-  smoothContourSubdivision,
-} from "./bezier";
+import { type SmoothedPath, smoothContour, smoothContourSubdivision } from "./bezier";
 import type { Contour } from "./contour";
 import { extractAllLayerContours } from "./multicolor";
 
@@ -16,11 +11,17 @@ export interface SmoothedLayerResult {
   rotation: number;
 }
 
-export type SmoothingMode = "pixel" | "squircle" | "smooth" | "handbrush";
+export type SmoothingMode = "none" | "pixel" | "squircle" | "smooth";
+
+export function usesRawGridStyling(mode: SmoothingMode): boolean {
+  return mode === "none";
+}
+
+type StyledSmoothingMode = Exclude<SmoothingMode, "none">;
 
 // Each mode declares its own smoother + stylizer + alpha transform — no external conditions
 const MODE_CONFIG: Record<
-  SmoothingMode,
+  StyledSmoothingMode,
   {
     smoother: (contour: Contour, alpha: number) => SmoothedPath;
     alphaTransform: (a: number) => number;
@@ -29,8 +30,6 @@ const MODE_CONFIG: Record<
   pixel: { smoother: smoothContour, alphaTransform: () => 0 },
   squircle: { smoother: smoothContour, alphaTransform: (a) => a },
   smooth: { smoother: smoothContourSubdivision, alphaTransform: (a) => a },
-  handbrush: { smoother: smoothContourHandbrush, alphaTransform: (a) => a },
-  //              ↑ owns its entire pipeline, no stylizer needed at all
 };
 
 export function computeSmoothedPaths(
@@ -39,8 +38,13 @@ export function computeSmoothedPaths(
   alpha: number,
   mode: SmoothingMode = "squircle",
 ): SmoothedLayerResult[] {
+  if (usesRawGridStyling(mode)) {
+    return [];
+  }
+
   const layerContours = extractAllLayerContours(grid, layerManager);
-  const { smoother, alphaTransform } = MODE_CONFIG[mode];
+  const styledMode = mode as StyledSmoothingMode;
+  const { smoother, alphaTransform } = MODE_CONFIG[styledMode];
   const adjustedAlpha = alphaTransform(alpha);
 
   return layerContours.map((lc) => {

@@ -24,6 +24,8 @@ interface EditorSurfaceProps {
       after: CellData;
     }>,
   ) => void;
+  canvasViewResetKey: number;
+  onResetCanvasView: () => void;
 }
 
 export function EditorSurface({
@@ -38,13 +40,25 @@ export function EditorSurface({
   onZoomChange,
   onCursorChange,
   onStrokeComplete,
+  canvasViewResetKey,
+  onResetCanvasView,
 }: EditorSurfaceProps) {
   return (
     <section className="editor-layout">
       <div className="editor-canvas">
         <div className="section-header section-header-split">
           <span>Editor</span>
-          <span className="editor-header-zoom">{Math.round(zoom * 100)}%</span>
+          <span className="editor-header-actions">
+            <button
+              type="button"
+              className="btn btn-xs"
+              onClick={onResetCanvasView}
+              title="Reset pan offset and zoom to 100%"
+            >
+              Reset view
+            </button>
+            <span className="editor-header-zoom">{Math.round(zoom * 100)}%</span>
+          </span>
         </div>
         <PixelCanvas
           grid={grid}
@@ -58,6 +72,7 @@ export function EditorSurface({
           onZoomChange={onZoomChange}
           onCursorChange={onCursorChange}
           onStrokeComplete={onStrokeComplete}
+          viewResetKey={canvasViewResetKey}
         />
       </div>
     </section>

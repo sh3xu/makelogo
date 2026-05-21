@@ -13,16 +13,16 @@ export function AppShell() {
     <div className="app-shell" data-theme={state.theme}>
       <WorkspaceHeader
         theme={state.theme}
-        gridSizeInput={state.gridSizeInput}
-        gridMin={state.gridMin}
-        gridMax={state.gridMax}
+        gridSize={state.gridSize}
         canUndo={state.canUndo}
         canRedo={state.canRedo}
         onThemeToggle={() => actions.setTheme(state.theme === "dark" ? "light" : "dark")}
-        onGridSizeInputChange={actions.setGridSizeInput}
-        onGridSizeSubmit={actions.handleGridSizeSubmit}
+        onGridSizeChange={actions.handleGridSizeChange}
         onUndo={actions.handleUndo}
         onRedo={actions.handleRedo}
+        sampleSummaries={state.sampleSummaries}
+        canvasHasContent={state.canvasHasContent}
+        onApplySample={actions.handleLoadSampleById}
       />
       <main className="workspace-grid">
         <aside className="workspace-tools">
@@ -41,10 +41,18 @@ export function AppShell() {
             onZoomChange={actions.setZoom}
             onCursorChange={actions.setCursorPos}
             onStrokeComplete={actions.handleStrokeComplete}
+            canvasViewResetKey={state.canvasViewResetKey}
+            onResetCanvasView={actions.handleResetCanvasView}
           />
         </div>
         <aside className="workspace-side">
-          <PreviewPanel smoothedResult={state.smoothedResult} gridSize={state.gridRef.current.n} />
+          <PreviewPanel
+            smoothedResult={state.smoothedResult}
+            gridSize={state.gridRef.current.n}
+            smoothingMode={state.smoothingMode}
+            grid={state.gridRef.current}
+            layerManager={state.layerManager}
+          />
           <InspectorPanel
             activeTool={state.activeTool}
             toolOptions={state.toolOptions}
@@ -64,12 +72,17 @@ export function AppShell() {
             onToggleVisibility={actions.handleToggleVisibility}
             onAddLayer={actions.handleAddLayer}
             onRotateLayer={actions.handleRotateLayer}
+            onRenameLayer={actions.handleRenameLayer}
             onRemoveLayer={actions.handleRemoveLayer}
             onAlphaChange={actions.setAlpha}
             onSmoothingModeChange={actions.setSmoothingMode}
             onExportModeChange={actions.setExportMode}
             onExportSvg={actions.handleExportSvg}
             onExportPng={actions.handleExportPng}
+            canvasHasContent={state.canvasHasContent}
+            theme={state.theme}
+            onExportProject={actions.handleExportProject}
+            onApplyImportedProject={actions.applyImportedProject}
           />
         </aside>
       </main>

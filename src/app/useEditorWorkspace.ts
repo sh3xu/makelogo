@@ -1,15 +1,26 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DrawStrokeCommand, History, RemoveLayerCommand, ResizeCommand } from "../canvas/history";
 import { resizeGrid } from "../canvas/resize";
-import { downloadPng, downloadSvg, generateFilename } from "../export/download";
+import {
+  downloadPng,
+  downloadProjectJson,
+  downloadSvg,
+  generateFilename,
+} from "../export/download";
 import type { ExportConfig } from "../export/integration";
 import { exportPng, exportSvg } from "../export/integration";
 import type { PngScale } from "../export/png";
 import type { CellData } from "../models/grid";
-import { clampGridSize, GRID_MAX, GRID_MIN, Grid } from "../models/grid";
+import { clampGridSize, Grid } from "../models/grid";
 import { LAYER_MAX_COUNT, LAYER_MIN_COUNT, LayerManager } from "../models/layers";
 import type { SymmetryMode, ToolOptions } from "../models/tools";
 import { DEFAULT_TOOL_OPTIONS, Tool } from "../models/tools";
+import { applyProjectDocument } from "../samples/applyProjectDocument";
+import { isCanvasNonEmpty } from "../samples/isCanvasNonEmpty";
+import { parseProjectImportText } from "../samples/projectImport";
+import { serializeProjectDocument } from "../samples/projectSerialize";
+import { getBundledSampleProjectJson, SAMPLE_REGISTRY } from "../samples/registry";
+import type { ProjectDocument } from "../samples/schema";
 import type { SmoothedLayerResult, SmoothingMode } from "../smoothing/slider";
 import { computeSmoothedPaths } from "../smoothing/slider";
 
@@ -26,7 +37,6 @@ export function useEditorWorkspace() {
   const [smoothingMode, setSmoothingMode] = useState<SmoothingMode>("smooth");
   const [smoothedResult, setSmoothedResult] = useState<SmoothedLayerResult[]>([]);
   const [exportMode, setExportMode] = useState<ExportMode>("no-bg");
-  const [gridSizeInput, setGridSizeInput] = useState("16");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [activeTool, setActiveTool] = useState<Tool>(Tool.Draw);
   const [toolOptions, setToolOptions] = useState<ToolOptions>(DEFAULT_TOOL_OPTIONS);
@@ -34,6 +44,17 @@ export function useEditorWorkspace() {
   const [cursorPos, setCursorPos] = useState<{ row: number; col: number } | null>(null);
 
   const bump = useCallback(() => setVersion((current) => current + 1), []);
+
+  const sampleSummaries = useMemo(
+    () =>
+      SAMPLE_REGISTRY.map(({ id, title, shortDescription, learningNote }) => ({
+        id,
+        title,
+        shortDescription,
+        learningNote,
+      })),
+    [],
+  );
 
   useEffect(() => {
     const grid = gridRef.current;
@@ -58,6 +79,7 @@ export function useEditorWorkspace() {
       return (
         target instanceof HTMLInputElement ||
         target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement ||
         (target instanceof HTMLElement && target.isContentEditable)
       );
     }
@@ -77,7 +99,6 @@ export function useEditorWorkspace() {
         if (isUndo) {
           event.preventDefault();
           historyRef.current.undo();
-          setGridSizeInput(String(gridRef.current.n));
           setVersion((current) => current + 1);
           return;
         }
@@ -85,7 +106,6 @@ export function useEditorWorkspace() {
         if (isRedo) {
           event.preventDefault();
           historyRef.current.redo();
-          setGridSizeInput(String(gridRef.current.n));
           setVersion((current) => current + 1);
           return;
         }
@@ -139,13 +159,11 @@ export function useEditorWorkspace() {
 
   const handleUndo = useCallback(() => {
     historyRef.current.undo();
-    setGridSizeInput(String(gridRef.current.n));
     bump();
   }, [bump]);
 
   const handleRedo = useCallback(() => {
     historyRef.current.redo();
-    setGridSizeInput(String(gridRef.current.n));
     bump();
   }, [bump]);
 
@@ -168,20 +186,10 @@ export function useEditorWorkspace() {
           newGrid,
         ),
       );
-      setGridSizeInput(String(clamped));
       bump();
     },
     [bump],
   );
-
-  const handleGridSizeSubmit = useCallback(() => {
-    const value = Number.parseInt(gridSizeInput, 10);
-    if (Number.isNaN(value)) {
-      setGridSizeInput(String(gridRef.current.n));
-      return;
-    }
-    handleResize(value);
-  }, [gridSizeInput, handleResize]);
 
   const handleSelectLayer = useCallback(
     (id: string) => {
@@ -213,6 +221,20 @@ export function useEditorWorkspace() {
     [bump],
   );
 
+  const handleRenameLayer = useCallback(
+    (id: string, name: string) => {
+      layerManagerRef.current.setLayerName(id, name);
+      bump();
+    },
+    [bump],
+  );
+
+  const [canvasViewResetKey, setCanvasViewResetKey] = useState(0);
+  const handleResetCanvasView = useCallback(() => {
+    setZoom(1);
+    setCanvasViewResetKey((key) => key + 1);
+  }, []);
+
   const handleRemoveLayer = useCallback(
     (id: string) => {
       const lm = layerManagerRef.current;
@@ -240,7 +262,6 @@ export function useEditorWorkspace() {
           activeLayerIdBefore,
         }),
       );
-      setGridSizeInput(String(grid.n));
       bump();
     },
     [bump],
@@ -264,6 +285,9 @@ export function useEditorWorkspace() {
       width: gridSize + 2,
       height: gridSize + 2,
       layers: smoothedResult,
+      smoothingMode,
+      grid: gridRef.current,
+      layerManager: layerManagerRef.current,
       background: { type: "transparent" },
       mode: exportMode,
       lightBg: "#ffffff",
@@ -271,7 +295,7 @@ export function useEditorWorkspace() {
       lightFg: "#000000",
       darkFg: "#ffffff",
     };
-  }, [exportMode, smoothedResult]);
+  }, [exportMode, smoothingMode, smoothedResult]);
 
   const handleExportSvg = useCallback(() => {
     const svg = exportSvg(buildExportConfig());
@@ -286,9 +310,47 @@ export function useEditorWorkspace() {
     [buildExportConfig, exportMode],
   );
 
+  const applyLoadedProjectDocument = useCallback(
+    (doc: ProjectDocument) => {
+      const { grid, layerManager } = applyProjectDocument(doc);
+      gridRef.current = grid;
+      layerManagerRef.current = layerManager;
+      historyRef.current.clear();
+      setZoom(1);
+      setCanvasViewResetKey((key) => key + 1);
+      bump();
+    },
+    [bump],
+  );
+
+  const handleLoadSampleById = useCallback(
+    (sampleId: string) => {
+      const text = getBundledSampleProjectJson(sampleId);
+      if (text === undefined) {
+        return;
+      }
+      const result = parseProjectImportText(text);
+      if (!result.ok) {
+        return;
+      }
+      applyLoadedProjectDocument(result.doc);
+    },
+    [applyLoadedProjectDocument],
+  );
+
+  const handleExportProject = useCallback(() => {
+    const doc = serializeProjectDocument(gridRef.current, layerManagerRef.current);
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    downloadProjectJson(doc, `glyph-project-${stamp}.json`);
+  }, []);
+
   const layerManager = layerManagerRef.current;
   const history = historyRef.current;
   const activeLayer = layerManager.getActiveLayer();
+  const canvasHasContent = useMemo(
+    () => isCanvasNonEmpty(gridRef.current, layerManagerRef.current),
+    [version],
+  );
 
   return useMemo(
     () => ({
@@ -301,7 +363,7 @@ export function useEditorWorkspace() {
         smoothingMode,
         smoothedResult,
         exportMode,
-        gridSizeInput,
+        gridSize: gridRef.current.n,
         theme,
         activeTool,
         toolOptions,
@@ -314,12 +376,12 @@ export function useEditorWorkspace() {
         canRedo: history.canRedo,
         canAddLayer: layerManager.layers.length < LAYER_MAX_COUNT,
         canRemoveLayer: layerManager.layers.length > LAYER_MIN_COUNT,
-        gridMin: GRID_MIN,
-        gridMax: GRID_MAX,
+        sampleSummaries,
+        canvasHasContent,
+        canvasViewResetKey,
       },
       actions: {
         setTheme,
-        setGridSizeInput,
         setActiveTool,
         setZoom,
         setCursorPos,
@@ -329,7 +391,7 @@ export function useEditorWorkspace() {
         setExportMode,
         handleUndo,
         handleRedo,
-        handleGridSizeSubmit,
+        handleGridSizeChange: handleResize,
         handleStrokeComplete,
         handleBrushSizeChange,
         handleSymmetryChange,
@@ -338,9 +400,14 @@ export function useEditorWorkspace() {
         handleToggleVisibility,
         handleAddLayer,
         handleRotateLayer,
+        handleRenameLayer,
         handleRemoveLayer,
         handleExportSvg,
         handleExportPng,
+        handleExportProject,
+        applyImportedProject: applyLoadedProjectDocument,
+        handleLoadSampleById,
+        handleResetCanvasView,
       },
     }),
     [
@@ -351,7 +418,6 @@ export function useEditorWorkspace() {
       smoothingMode,
       smoothedResult,
       exportMode,
-      gridSizeInput,
       theme,
       activeTool,
       toolOptions,
@@ -362,7 +428,7 @@ export function useEditorWorkspace() {
       history.canRedo,
       handleUndo,
       handleRedo,
-      handleGridSizeSubmit,
+      handleResize,
       handleStrokeComplete,
       handleBrushSizeChange,
       handleSymmetryChange,
@@ -371,9 +437,17 @@ export function useEditorWorkspace() {
       handleToggleVisibility,
       handleAddLayer,
       handleRotateLayer,
+      handleRenameLayer,
       handleRemoveLayer,
       handleExportSvg,
       handleExportPng,
+      handleExportProject,
+      applyLoadedProjectDocument,
+      sampleSummaries,
+      canvasHasContent,
+      canvasViewResetKey,
+      handleLoadSampleById,
+      handleResetCanvasView,
     ],
   );
 }
