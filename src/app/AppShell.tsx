@@ -58,6 +58,7 @@ export function AppShell() {
             alpha={state.alpha}
             smoothingMode={state.smoothingMode}
             exportMode={state.exportMode}
+            exportStyling={state.exportStyling}
             onBrushSizeChange={actions.handleBrushSizeChange}
             onSymmetryChange={actions.handleSymmetryChange}
             onShapeFilledChange={actions.handleShapeFilledChange}
@@ -71,6 +72,7 @@ export function AppShell() {
             onAlphaChange={actions.setAlpha}
             onSmoothingModeChange={actions.setSmoothingMode}
             onExportModeChange={actions.setExportMode}
+            onExportStylingChange={actions.setExportStyling}
             onExportSvg={actions.handleExportSvg}
             onExportPng={actions.handleExportPng}
             canvasHasContent={state.canvasHasContent}

@@ -1,12 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Grid } from "../models/grid";
 import type { LayerManager } from "../models/layers";
-import {
-  type SmoothedPath,
-  smoothContour,
-  smoothContourHandbrush,
-  smoothContourSubdivision,
-} from "./bezier";
+import { type SmoothedPath, smoothContour, smoothContourSubdivision } from "./bezier";
 import type { Contour } from "./contour";
 import { extractAllLayerContours } from "./multicolor";
 
@@ -16,7 +11,7 @@ export interface SmoothedLayerResult {
   rotation: number;
 }
 
-export type SmoothingMode = "pixel" | "squircle" | "smooth" | "handbrush";
+export type SmoothingMode = "pixel" | "squircle" | "smooth";
 
 // Each mode declares its own smoother + stylizer + alpha transform — no external conditions
 const MODE_CONFIG: Record<
@@ -29,8 +24,6 @@ const MODE_CONFIG: Record<
   pixel: { smoother: smoothContour, alphaTransform: () => 0 },
   squircle: { smoother: smoothContour, alphaTransform: (a) => a },
   smooth: { smoother: smoothContourSubdivision, alphaTransform: (a) => a },
-  handbrush: { smoother: smoothContourHandbrush, alphaTransform: (a) => a },
-  //              ↑ owns its entire pipeline, no stylizer needed at all
 };
 
 export function computeSmoothedPaths(

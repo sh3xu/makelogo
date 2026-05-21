@@ -1,13 +1,21 @@
+import type { Grid } from "../models/grid";
+import type { LayerManager } from "../models/layers";
 import type { SmoothedLayerResult } from "../smoothing/slider";
 import type { BackgroundOption } from "./background";
 import { generateSvgWithBackground } from "./background";
 import { type PngScale, rasterizeSvgToPng } from "./png";
+import { generatePixelModeSvg, generatePixelSvg } from "./pixelSvg";
 import { generateModeSvg, generateSvg } from "./svg";
+
+export type ExportStyling = "styled" | "as-is";
 
 export interface ExportConfig {
   width: number;
   height: number;
   layers: SmoothedLayerResult[];
+  styling: ExportStyling;
+  grid?: Grid;
+  layerManager?: LayerManager;
   background: BackgroundOption;
   mode: "light" | "dark" | "no-bg";
   lightBg: string;
@@ -16,10 +24,26 @@ export interface ExportConfig {
   darkFg: string;
 }
 
-/**
- * Generate SVG string respecting mode and background settings.
- */
-export function exportSvg(config: ExportConfig): string {
+function requireGridExport(config: ExportConfig): { grid: Grid; layerManager: LayerManager } {
+  if (!config.grid || !config.layerManager) {
+    throw new Error("as-is export requires grid and layerManager");
+  }
+  return { grid: config.grid, layerManager: config.layerManager };
+}
+
+function exportAsIsSvg(config: ExportConfig): string {
+  const { grid, layerManager } = requireGridExport(config);
+  const { width, height } = config;
+
+  if (config.mode === "no-bg") {
+    return generatePixelSvg(grid, layerManager, width, height);
+  }
+
+  const bg = config.mode === "light" ? config.lightBg : config.darkBg;
+  return generatePixelModeSvg(grid, layerManager, width, height, bg);
+}
+
+function exportStyledSvg(config: ExportConfig): string {
   if (config.mode === "no-bg") {
     return generateSvg({ width: config.width, height: config.height, layers: config.layers });
   }
@@ -37,6 +61,16 @@ export function exportSvg(config: ExportConfig): string {
     bg,
     fg,
   );
+}
+
+/**
+ * Generate SVG string respecting mode and background settings.
+ */
+export function exportSvg(config: ExportConfig): string {
+  if (config.styling === "as-is") {
+    return exportAsIsSvg(config);
+  }
+  return exportStyledSvg(config);
 }
 
 /**

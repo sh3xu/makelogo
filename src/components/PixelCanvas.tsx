@@ -24,7 +24,7 @@ interface StrokeState {
     before: CellData;
     after: CellData;
   }>;
-  visited: Set<string>;
+  lastCell: CellCoord;
 }
 
 interface ShapeDragState {
@@ -326,6 +326,23 @@ export function PixelCanvas({
     return changes;
   }
 
+  function extendFreehandStroke(toCell: CellCoord) {
+    const stroke = strokeRef.current;
+    if (!stroke) return;
+
+    const { lastCell } = stroke;
+    if (lastCell.row === toCell.row && lastCell.col === toCell.col) {
+      return;
+    }
+
+    const segment = bresenhamLine(lastCell.row, lastCell.col, toCell.row, toCell.col);
+    const newChanges = applyCells(segment, stroke.mode);
+    if (newChanges.length > 0) {
+      stroke.changes.push(...newChanges);
+    }
+    stroke.lastCell = toCell;
+  }
+
   function handleMouseDown(e: MouseEvent<HTMLCanvasElement>) {
     e.preventDefault();
 
@@ -382,14 +399,13 @@ export function PixelCanvas({
             ? "erase"
             : "paint";
 
-    const changes = applyCells([cell], mode);
-
     strokeRef.current = {
       mode,
       layerId,
-      changes,
-      visited: new Set([`${cell.row},${cell.col}`]),
+      changes: [],
+      lastCell: cell,
     };
+    extendFreehandStroke(cell);
 
     redrawRef.current();
   }
@@ -443,14 +459,8 @@ export function PixelCanvas({
       return;
     }
 
-    // Freehand stroke
     if (strokeRef.current && cell) {
-      const key = `${cell.row},${cell.col}`;
-      if (!strokeRef.current.visited.has(key)) {
-        strokeRef.current.visited.add(key);
-        const newChanges = applyCells([cell], strokeRef.current.mode);
-        strokeRef.current.changes.push(...newChanges);
-      }
+      extendFreehandStroke(cell);
     }
 
     redrawRef.current();

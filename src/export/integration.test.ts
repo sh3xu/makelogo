@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { Grid } from "../models/grid";
+import { LayerManager } from "../models/layers";
 import type { SmoothedLayerResult } from "../smoothing/slider";
 import { type ExportConfig, exportSvg } from "./integration";
 
@@ -23,6 +25,7 @@ const BASE_CONFIG: ExportConfig = {
   width: 10,
   height: 10,
   layers: MOCK_LAYERS,
+  styling: "styled",
   background: { type: "transparent" },
   mode: "light",
   lightBg: "#ffffff",
@@ -63,5 +66,28 @@ describe("exportSvg integration (T-021)", () => {
     });
     expect(svg).toContain("<path");
     expect(svg).toContain("</svg>");
+  });
+
+  it("as-is export uses pixel rects from the grid", () => {
+    const grid = new Grid(8);
+    const layerManager = new LayerManager([
+      { id: "l1", name: "Layer 1", visible: true, rotation: 0 },
+    ]);
+    grid.initLayer("l1");
+    grid.fillCell("l1", 1, 1, "#ff0000");
+
+    const svg = exportSvg({
+      ...BASE_CONFIG,
+      width: 10,
+      height: 10,
+      styling: "as-is",
+      mode: "no-bg",
+      grid,
+      layerManager,
+    });
+
+    expect(svg).toContain("<rect");
+    expect(svg).not.toContain("<path");
+    expect(svg).toContain('fill="#ff0000"');
   });
 });
