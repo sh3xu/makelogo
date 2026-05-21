@@ -6,7 +6,6 @@ import {
   SmoothingSection,
   ToolOptionsSection,
 } from "../../components/Inspector";
-import type { ExportStyling } from "../../export/integration";
 import type { PngScale } from "../../export/png";
 import type { Layer } from "../../models/layers";
 import type { SymmetryMode, Tool, ToolOptions } from "../../models/tools";
@@ -26,7 +25,6 @@ interface InspectorPanelProps {
   alpha: number;
   smoothingMode: SmoothingMode;
   exportMode: ExportMode;
-  exportStyling: ExportStyling;
   onBrushSizeChange: (size: 1 | 2 | 3 | 4) => void;
   onSymmetryChange: (mode: SymmetryMode) => void;
   onShapeFilledChange: (filled: boolean) => void;
@@ -40,7 +38,6 @@ interface InspectorPanelProps {
   onAlphaChange: (value: number) => void;
   onSmoothingModeChange: (mode: SmoothingMode) => void;
   onExportModeChange: (mode: ExportMode) => void;
-  onExportStylingChange: (styling: ExportStyling) => void;
   onExportSvg: () => void;
   onExportPng: (scale: PngScale) => void;
   canvasHasContent: boolean;
@@ -121,9 +118,7 @@ export function InspectorPanel(props: InspectorPanelProps) {
         {tab === "export" && (
           <ExportSection
             exportMode={props.exportMode}
-            exportStyling={props.exportStyling}
             onExportModeChange={props.onExportModeChange}
-            onExportStylingChange={props.onExportStylingChange}
             onExportSvg={props.onExportSvg}
             onExportPng={props.onExportPng}
             canvasHasContent={props.canvasHasContent}

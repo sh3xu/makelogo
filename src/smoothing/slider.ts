@@ -11,11 +11,17 @@ export interface SmoothedLayerResult {
   rotation: number;
 }
 
-export type SmoothingMode = "pixel" | "squircle" | "smooth";
+export type SmoothingMode = "none" | "pixel" | "squircle" | "smooth";
+
+export function usesRawGridStyling(mode: SmoothingMode): boolean {
+  return mode === "none";
+}
+
+type StyledSmoothingMode = Exclude<SmoothingMode, "none">;
 
 // Each mode declares its own smoother + stylizer + alpha transform — no external conditions
 const MODE_CONFIG: Record<
-  SmoothingMode,
+  StyledSmoothingMode,
   {
     smoother: (contour: Contour, alpha: number) => SmoothedPath;
     alphaTransform: (a: number) => number;
@@ -32,8 +38,13 @@ export function computeSmoothedPaths(
   alpha: number,
   mode: SmoothingMode = "squircle",
 ): SmoothedLayerResult[] {
+  if (usesRawGridStyling(mode)) {
+    return [];
+  }
+
   const layerContours = extractAllLayerContours(grid, layerManager);
-  const { smoother, alphaTransform } = MODE_CONFIG[mode];
+  const styledMode = mode as StyledSmoothingMode;
+  const { smoother, alphaTransform } = MODE_CONFIG[styledMode];
   const adjustedAlpha = alphaTransform(alpha);
 
   return layerContours.map((lc) => {

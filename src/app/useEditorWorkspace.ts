@@ -7,7 +7,7 @@ import {
   downloadSvg,
   generateFilename,
 } from "../export/download";
-import type { ExportConfig, ExportStyling } from "../export/integration";
+import type { ExportConfig } from "../export/integration";
 import { exportPng, exportSvg } from "../export/integration";
 import type { PngScale } from "../export/png";
 import type { CellData } from "../models/grid";
@@ -37,7 +37,6 @@ export function useEditorWorkspace() {
   const [smoothingMode, setSmoothingMode] = useState<SmoothingMode>("smooth");
   const [smoothedResult, setSmoothedResult] = useState<SmoothedLayerResult[]>([]);
   const [exportMode, setExportMode] = useState<ExportMode>("no-bg");
-  const [exportStyling, setExportStyling] = useState<ExportStyling>("styled");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [activeTool, setActiveTool] = useState<Tool>(Tool.Draw);
   const [toolOptions, setToolOptions] = useState<ToolOptions>(DEFAULT_TOOL_OPTIONS);
@@ -286,7 +285,7 @@ export function useEditorWorkspace() {
       width: gridSize + 2,
       height: gridSize + 2,
       layers: smoothedResult,
-      styling: exportStyling,
+      smoothingMode,
       grid: gridRef.current,
       layerManager: layerManagerRef.current,
       background: { type: "transparent" },
@@ -296,7 +295,7 @@ export function useEditorWorkspace() {
       lightFg: "#000000",
       darkFg: "#ffffff",
     };
-  }, [exportMode, exportStyling, smoothedResult]);
+  }, [exportMode, smoothingMode, smoothedResult]);
 
   const handleExportSvg = useCallback(() => {
     const svg = exportSvg(buildExportConfig());
@@ -361,7 +360,6 @@ export function useEditorWorkspace() {
         smoothingMode,
         smoothedResult,
         exportMode,
-        exportStyling,
         gridSize: gridRef.current.n,
         theme,
         activeTool,
@@ -388,7 +386,6 @@ export function useEditorWorkspace() {
         setAlpha,
         setSmoothingMode,
         setExportMode,
-        setExportStyling,
         handleUndo,
         handleRedo,
         handleGridSizeChange: handleResize,
@@ -418,7 +415,6 @@ export function useEditorWorkspace() {
       smoothingMode,
       smoothedResult,
       exportMode,
-      exportStyling,
       theme,
       activeTool,
       toolOptions,

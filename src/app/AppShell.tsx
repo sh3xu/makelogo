@@ -46,7 +46,13 @@ export function AppShell() {
           />
         </div>
         <aside className="workspace-side">
-          <PreviewPanel smoothedResult={state.smoothedResult} gridSize={state.gridRef.current.n} />
+          <PreviewPanel
+            smoothedResult={state.smoothedResult}
+            gridSize={state.gridRef.current.n}
+            smoothingMode={state.smoothingMode}
+            grid={state.gridRef.current}
+            layerManager={state.layerManager}
+          />
           <InspectorPanel
             activeTool={state.activeTool}
             toolOptions={state.toolOptions}
@@ -58,7 +64,6 @@ export function AppShell() {
             alpha={state.alpha}
             smoothingMode={state.smoothingMode}
             exportMode={state.exportMode}
-            exportStyling={state.exportStyling}
             onBrushSizeChange={actions.handleBrushSizeChange}
             onSymmetryChange={actions.handleSymmetryChange}
             onShapeFilledChange={actions.handleShapeFilledChange}
@@ -72,7 +77,6 @@ export function AppShell() {
             onAlphaChange={actions.setAlpha}
             onSmoothingModeChange={actions.setSmoothingMode}
             onExportModeChange={actions.setExportMode}
-            onExportStylingChange={actions.setExportStyling}
             onExportSvg={actions.handleExportSvg}
             onExportPng={actions.handleExportPng}
             canvasHasContent={state.canvasHasContent}

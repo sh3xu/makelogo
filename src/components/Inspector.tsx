@@ -1,5 +1,4 @@
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
-import type { ExportStyling } from "../export/integration";
 import type { PngScale } from "../export/png";
 import { clampPngScale, MAX_PNG_SCALE, MIN_PNG_SCALE } from "../export/png";
 import type { Layer } from "../models/layers";
@@ -46,9 +45,7 @@ export interface InspectorProps {
 
   // Export
   exportMode: ExportMode;
-  exportStyling: ExportStyling;
   onExportModeChange: (mode: ExportMode) => void;
-  onExportStylingChange: (styling: ExportStyling) => void;
   onExportSvg: () => void;
   onExportPng: (scale: PngScale) => void;
   canvasHasContent: boolean;
@@ -100,9 +97,7 @@ export function Inspector({ ...props }: InspectorProps) {
       />
       <ExportSection
         exportMode={props.exportMode}
-        exportStyling={props.exportStyling}
         onExportModeChange={props.onExportModeChange}
-        onExportStylingChange={props.onExportStylingChange}
         onExportSvg={props.onExportSvg}
         onExportPng={props.onExportPng}
         canvasHasContent={props.canvasHasContent}
@@ -437,12 +432,15 @@ export function SmoothingSection({
   smoothingMode,
   onSmoothingModeChange,
 }: SmoothingSectionProps) {
+  const rawGrid = smoothingMode === "none";
+
   return (
     <div className="inspector-section">
       <span className="inspector-label">Styling</span>
       <SegmentedControl
         size="sm"
         options={[
+          { value: "none", label: "None" },
           { value: "pixel", label: "Pixel" },
           { value: "squircle", label: "Squircle" },
           { value: "smooth", label: "Smooth" },
@@ -460,6 +458,7 @@ export function SmoothingSection({
           value={alpha}
           onChange={(e) => onAlphaChange(parseFloat(e.target.value))}
           aria-label="Styling intensity"
+          disabled={rawGrid}
         />
         <span className="slider-value">{alpha.toFixed(2)}</span>
       </div>
@@ -469,9 +468,7 @@ export function SmoothingSection({
 
 interface ExportSectionProps {
   exportMode: ExportMode;
-  exportStyling: ExportStyling;
   onExportModeChange: (mode: ExportMode) => void;
-  onExportStylingChange: (styling: ExportStyling) => void;
   onExportSvg: () => void;
   onExportPng: (scale: PngScale) => void;
   canvasHasContent: boolean;
@@ -482,9 +479,7 @@ interface ExportSectionProps {
 
 export function ExportSection({
   exportMode,
-  exportStyling,
   onExportModeChange,
-  onExportStylingChange,
   onExportSvg,
   onExportPng,
   canvasHasContent,
@@ -554,18 +549,6 @@ export function ExportSection({
         value={exportMode}
         onChange={onExportModeChange}
       />
-      <div className="inspector-row">
-        <span className="inspector-sublabel">Output</span>
-        <SegmentedControl
-          size="sm"
-          options={[
-            { value: "styled", label: "Styled" },
-            { value: "as-is", label: "As-is" },
-          ]}
-          value={exportStyling}
-          onChange={onExportStylingChange}
-        />
-      </div>
       <div className="inspector-row">
         <span className="inspector-sublabel">Format</span>
         <SegmentedControl

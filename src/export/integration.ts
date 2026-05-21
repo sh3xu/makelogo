@@ -1,19 +1,18 @@
 import type { Grid } from "../models/grid";
 import type { LayerManager } from "../models/layers";
-import type { SmoothedLayerResult } from "../smoothing/slider";
+import type { SmoothedLayerResult, SmoothingMode } from "../smoothing/slider";
+import { usesRawGridStyling } from "../smoothing/slider";
 import type { BackgroundOption } from "./background";
 import { generateSvgWithBackground } from "./background";
 import { type PngScale, rasterizeSvgToPng } from "./png";
 import { generatePixelModeSvg, generatePixelSvg } from "./pixelSvg";
 import { generateModeSvg, generateSvg } from "./svg";
 
-export type ExportStyling = "styled" | "as-is";
-
 export interface ExportConfig {
   width: number;
   height: number;
   layers: SmoothedLayerResult[];
-  styling: ExportStyling;
+  smoothingMode: SmoothingMode;
   grid?: Grid;
   layerManager?: LayerManager;
   background: BackgroundOption;
@@ -67,7 +66,7 @@ function exportStyledSvg(config: ExportConfig): string {
  * Generate SVG string respecting mode and background settings.
  */
 export function exportSvg(config: ExportConfig): string {
-  if (config.styling === "as-is") {
+  if (usesRawGridStyling(config.smoothingMode)) {
     return exportAsIsSvg(config);
   }
   return exportStyledSvg(config);

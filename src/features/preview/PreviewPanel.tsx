@@ -1,14 +1,25 @@
 import { useEffect, useState } from "react";
 import { CloseIcon, ExpandIcon } from "../../components/icons";
 import { Preview } from "../../components/Preview";
-import type { SmoothedLayerResult } from "../../smoothing/slider";
+import type { Grid } from "../../models/grid";
+import type { LayerManager } from "../../models/layers";
+import type { SmoothedLayerResult, SmoothingMode } from "../../smoothing/slider";
 
 interface PreviewPanelProps {
   smoothedResult: SmoothedLayerResult[];
   gridSize: number;
+  smoothingMode: SmoothingMode;
+  grid: Grid;
+  layerManager: LayerManager;
 }
 
-export function PreviewPanel({ smoothedResult, gridSize }: PreviewPanelProps) {
+export function PreviewPanel({
+  smoothedResult,
+  gridSize,
+  smoothingMode,
+  grid,
+  layerManager,
+}: PreviewPanelProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
@@ -38,7 +49,13 @@ export function PreviewPanel({ smoothedResult, gridSize }: PreviewPanelProps) {
           <ExpandIcon />
         </button>
       </div>
-      <Preview smoothedResult={smoothedResult} gridSize={gridSize} />
+      <Preview
+        smoothedResult={smoothedResult}
+        gridSize={gridSize}
+        smoothingMode={smoothingMode}
+        grid={grid}
+        layerManager={layerManager}
+      />
 
       {isFullscreen && (
         <div className="fullscreen-overlay" role="dialog" aria-label="Full screen preview">
@@ -55,7 +72,13 @@ export function PreviewPanel({ smoothedResult, gridSize }: PreviewPanelProps) {
             </button>
           </div>
           <div className="fullscreen-body">
-            <Preview smoothedResult={smoothedResult} gridSize={gridSize} />
+            <Preview
+        smoothedResult={smoothedResult}
+        gridSize={gridSize}
+        smoothingMode={smoothingMode}
+        grid={grid}
+        layerManager={layerManager}
+      />
           </div>
         </div>
       )}
